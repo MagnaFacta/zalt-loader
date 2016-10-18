@@ -1,0 +1,37 @@
+{
+    "name": "MagnaFacta/zalt-loader",
+    "description": "Zend Alternative Loader",
+    "type": "library",
+    "require": {
+        "php": ">=5.6.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "3.7.*"
+    },
+    "authors": [
+        {
+            "name": "Matijs de Jong",
+            "email": "mjong@magnafacta.nl"
+        },
+        {
+            "name": "Menno Dekker",
+            "email": "menno.dekker@erasmusmc.nl"
+        }
+    ],
+    "minimum-stability": "dev",
+    "autoload": {
+        "psr-4": {
+            "Zalt\\Loader\\": "src"
+        }
+    },
+    "repositories": [
+		{
+		  "type": "git",
+		  "url": "https://github.com/GemsTracker/hl7.git"
+		},
+		{
+		  "type": "git",
+		  "url": "https://github.com/MagnaFacta/zalt-loader.git"
+		}
+    ]
+}
