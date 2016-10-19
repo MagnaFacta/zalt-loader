@@ -39,15 +39,9 @@ class ProjectOverloader
      * @var array
      */
     protected $_overloaders = array(
-        'Zend' => 'Zend',
         'Zalt' => 'Zalt',
+        'Zend' => 'Zend',
         );
-
-    /**
-     * The previous loadrs
-     * @var array Callables
-     */
-    protected $_previousLoaders;
 
     /**
      *
@@ -72,22 +66,41 @@ class ProjectOverloader
         } else {
             $this->disableOverloading();
         }
-
-        $this->_previousLoaders = spl_autoload_functions();
-
-        spl_autoload_register(array($this, 'loadClass'), true, true);
     }
 
     /**
      *
-     * @param array $overloaders New overloaders, if overloader exists already the order is not changed
+     * @param array $overloaders New overloaders, first overloader is tried first
      * @return \Zalt\Loader\ProjectOverloader
      */
     public function addOverloaders(array $overloaders = array())
     {
-        $this->setOverloaders($this->_overloaders + $overloaders);
+        $this->setOverloaders($overloaders + $this->_overloaders);
 
         return $this;
+    }
+
+    /**
+     * Loads the given class or interface.
+     *
+     * @param  string    $className The name of the class, minus the prefix
+     * @param  array     $arguments Class loadiung arguments
+     * @return object    The created object
+     */
+    public function create($className, ...$arguments)
+    {
+        if (! $this->_enabled) {
+            return null;
+        }
+
+        foreach ($this->_overloaders as $prefix) {
+            $class = $prefix . '\\' . $className;
+
+            echo "$class\n";
+            if (class_exists($class, true)) {
+                return new $class(...$arguments);
+            }
+        }
     }
 
     /**
@@ -141,21 +154,6 @@ class ProjectOverloader
     public function getOverloading()
     {
         return $this->_enabled;
-    }
-
-    /**
-     * Loads the given class or interface.
-     *
-     * @param  string    $class The name of the class
-     * @return bool|null True if loaded, null otherwise
-     */
-    public function loadClass($class)
-    {
-        if (! $this->_enabled) {
-            return null;
-        }
-        
-        echo $class . "\n";
     }
 
     /**
