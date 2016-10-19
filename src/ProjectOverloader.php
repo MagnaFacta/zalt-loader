@@ -10,6 +10,11 @@
  */
 namespace Zalt\Loader;
 
+use Zalt\Loader\Exception\LoadException;
+use Zalt\Loader\Target\TargetInterface;
+
+use Zend\ServiceManager\ServiceLocatorInterface;
+
 /**
  *
  *
@@ -34,6 +39,12 @@ class ProjectOverloader
     protected $_enabled = true;
 
     /**
+     *
+     * @var boolean
+     */
+    protected $_requireServiceManager = true;
+
+    /**
      * Array Prefix => Prefix of classes possibly overloaded
      *
      * @var array
@@ -42,6 +53,12 @@ class ProjectOverloader
         'Zalt' => 'Zalt',
         'Zend' => 'Zend',
         );
+
+    /**
+     *
+     * @var ServiceLocatorInterface
+     */
+    protected $_serviceManager;
 
     /**
      *
@@ -81,11 +98,43 @@ class ProjectOverloader
     }
 
     /**
+     *
+     * @param TargetInterface $target
+     * @return boolean
+     * @throws LoadException
+     */
+    public function applyToTarget(TargetInterface $target)
+    {
+        if (! $this->_serviceManager instanceof ServiceLocatorInterface) {
+            if ($this->_requireServiceManager) {
+                throw new LoadException("Calling applyToTarger while ServiceManager is not set.");
+            }
+
+            return false;
+        }
+
+        foreach ($target->getRegistryRequests() as $name) {
+            if ($this->_serviceManager->has($name)) {
+                $target->answerRegistryRequest($name, $this->_serviceManager->get($name));
+            } elseif ('loader' == $name) {
+                $target->answerRegistryRequest($name, $this);
+            }
+        }
+
+        $output = $target->checkRegistryRequestsAnswers();
+
+        $target->afterRegistry();
+
+        return $output;
+    }
+
+    /**
      * Loads the given class or interface.
      *
      * @param  string    $className The name of the class, minus the prefix
      * @param  array     $arguments Class loadiung arguments
      * @return object    The created object
+     * @throws LoadException
      */
     public function create($className, ...$arguments)
     {
@@ -96,11 +145,20 @@ class ProjectOverloader
         foreach ($this->_overloaders as $prefix) {
             $class = $prefix . '\\' . $className;
 
-            echo "$class\n";
+            // echo "$class\n";
             if (class_exists($class, true)) {
-                return new $class(...$arguments);
+                $object = new $class(...$arguments);
+
+                if ($object instanceof TargetInterface) {
+                    $this->applyToTarget($object);
+                }
+
+                return $object;
             }
         }
+
+        throw new LoadException("Could not load class .\\$className for any of the parent namespaces: "
+            . implode(', ', $this->_overloaders));
     }
 
     /**
@@ -157,6 +215,48 @@ class ProjectOverloader
     }
 
     /**
+     * Get service manager
+     *
+     * @return ServiceLocatorInterface
+     */
+    public function getServiceManager()
+    {
+        return $this->_serviceManager;
+    }
+
+    /**
+     * Ignore missing service managers (e.g. for testing).
+     *
+     * @return \Zalt\Loader\ProjectOverloader
+     */
+    public function ignoreMissingServiceManager()
+    {
+        $this->_requireServiceManager = false;
+
+        return $this;
+    }
+
+    /**
+     * Is a missing service managers ignored (e.g. for testing).
+     *
+     * @return \Zalt\Loader\ProjectOverloader
+     */
+    public function isServiceManagerRequired()
+    {
+        return $this->_requireServiceManager;
+    }
+
+    /**
+     * Is a service managers required when used.
+     *
+     * @return boolean
+     */
+    public function requireServiceManager()
+    {
+        return $this->_requireServiceManager;
+    }
+
+    /**
      *
      * @param array $overloaders New overloaders
      * @return \Zalt\Loader\ProjectOverloader
@@ -164,6 +264,18 @@ class ProjectOverloader
     public function setOverloaders(array $overloaders = array())
     {
         $this->_overloaders = array_combine($overloaders, $overloaders);
+
+        return $this;
+    }
+
+    /**
+     * Set service locator
+     *
+     * @param ServiceLocatorInterface $serviceManager
+     */
+    public function setServiceManager(ServiceLocatorInterface $serviceManager)
+    {
+        $this->_serviceManager = $serviceManager;
 
         return $this;
     }
