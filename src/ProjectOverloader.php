@@ -36,12 +36,6 @@ class ProjectOverloader
      *
      * @var boolean
      */
-    protected $_enabled = true;
-
-    /**
-     *
-     * @var boolean
-     */
     protected $_requireServiceManager = true;
 
     /**
@@ -61,12 +55,32 @@ class ProjectOverloader
     protected $_serviceManager;
 
     /**
+     * Global overrule verbose switch
+     *
+     * @var boolean
+     */
+    public $verbose = false;
+
+    /**
+     * Show all load attempts until successful
+     *
+     * @var boolean
+     */
+    public $verboseLoad = false;
+
+    /**
+     * Show all unsuccesful targer set attempts
+     *
+     * @var boolean
+     */
+    public $verboseTarget = false;
+
+    /**
      *
      * @param array $overloaders New overloaders
      * @param boolean $add       Add to default overloaders
-     * @param boolean $enable    Enable project overloader
      */
-    public function __construct(array $overloaders = array(), $add = true, $enable = true)
+    public function __construct(array $overloaders = array(), $add = true)
     {
         self::$_instance = $this;
 
@@ -76,12 +90,6 @@ class ProjectOverloader
             } else {
                 $this->setOverloaders($overloaders);
             }
-        }
-
-        if ($enable) {
-            $this->enableOverloading();
-        } else {
-            $this->disableOverloading();
         }
     }
 
@@ -113,11 +121,15 @@ class ProjectOverloader
             return false;
         }
 
+        $verbose = $this->verbose || $this->verboseTarget;
+
         foreach ($target->getRegistryRequests() as $name) {
             if ($this->_serviceManager->has($name)) {
                 $target->answerRegistryRequest($name, $this->_serviceManager->get($name));
             } elseif ('loader' == $name) {
                 $target->answerRegistryRequest($name, $this);
+            } elseif ($verbose) {
+                echo "Could not find target name: $name\n";
             }
         }
 
@@ -138,49 +150,48 @@ class ProjectOverloader
      */
     public function create($className, ...$arguments)
     {
-        if (! $this->_enabled) {
-            return null;
+        $class = $this->find($className);
+        if (! $class) {
+            throw new LoadException("Xreate not load class .\\$className for any of the parent namespaces: "
+                . implode(', ', $this->_overloaders));
         }
+
+        $object = new $class(...$arguments);
+
+        if ($object instanceof TargetInterface) {
+            $this->applyToTarget($object);
+        }
+
+        return $object;
+    }
+
+    /**
+     * Finds the given class or interface.
+     *
+     * @param  string $className The name of the class, minus the prefix
+     * @return string The class name including the correct prefix
+     * @throws LoadException
+     */
+    public function find($className)
+    {
+        $verbose = $this->verbose || $this->verboseLoad;
 
         foreach ($this->_overloaders as $prefix) {
             $class = $prefix . '\\' . $className;
 
-            // echo "$class\n";
+            if ($verbose) {
+                echo "Load attempt $class\n";
+            }
             if (class_exists($class, true)) {
-                $object = new $class(...$arguments);
-
-                if ($object instanceof TargetInterface) {
-                    $this->applyToTarget($object);
+                if ($verbose) {
+                    echo "Load succesful!\n";
                 }
-
-                return $object;
+                return $class;
             }
         }
 
         throw new LoadException("Could not load class .\\$className for any of the parent namespaces: "
             . implode(', ', $this->_overloaders));
-    }
-
-    /**
-     *
-     * @return \Zalt\Loader\ProjectOverloader
-     */
-    public function disableOverloading()
-    {
-        $this->_enabled = false;
-
-        return $this;
-    }
-
-    /**
-     *
-     * @return \Zalt\Loader\ProjectOverloader
-     */
-    public function enableOverloading()
-    {
-        $this->_enabled = true;
-
-        return $this;
     }
 
     /**
