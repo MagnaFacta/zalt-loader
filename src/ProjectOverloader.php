@@ -84,7 +84,10 @@ class ProjectOverloader
      */
     public function __construct(array $overloaders = array(), $add = true)
     {
-        self::$_instance = $this;
+        if (! self::$_instance instanceof self) {
+            // Only set for initial overloader
+            self::$_instance = $this;
+        }
 
         if ($overloaders) {
             if ($add) {
@@ -143,22 +146,68 @@ class ProjectOverloader
     }
 
     /**
-     * Loads the given class or interface.
+     * Creates a new object of the given class.
      *
-     * @param  string    $className The name of the class, minus the prefix
-     * @param  array     $arguments Class loadiung arguments
-     * @return object    The created object
+     * Simple use is with a string class name: $this->create('MyClass') will
+     * try to create 'Zalt\MyClass' or else 'Zend\MyClass' or whatever overloader
+     * directories have been set.
+     *
+     * You can add parameters: $this->create('MyClass', 'x', 'y') will
+     * create e.g.: new Zalt\MyClass('x', 'y')
+     *
+     * In general this function tries to make sense of what is passed: an array
+     * that is not callable is assumed to consist of the className followed by
+     * arguments. A callable is called and then the result is processed. If an
+     * object is passed or the result of the previous processing it is just
+     * checked for having to call applyToTarget().
+     *
+     * The result is that all these functions result in: new Zalt\MyClass('x', 'y')
+     * <code>
+     *  $this->create('MyClass', 'x', 'y');
+     *  $this->create(['MyClass', 'x', 'y']);
+     *  $this->create(function () { return 'MyClass'; }, 'x', 'y');
+     *  $this->create(function () { return new \Zalt\MyClass('x', 'y'); });
+     *  $this->create(new \Zalt\MyClass('x', 'y'));
+     *
+     *  // Output in all cases:
+     *  // new Zalt\MyClass('x', 'y')
+     *
+     *  // But this generates an error:
+     *  $this->create(['MyClass',  'x'], 'y');
+     * </code>
+     *
+     * @param  mixed  $className The name of the class, minus the prefix
+     * @param  array  $arguments Class loading arguments
+     * @return object The created object
      * @throws LoadException
      */
     public function create($className, ...$arguments)
     {
-        $class = $this->find($className);
-        if (! $class) {
-            throw new LoadException("Create counld not load class .\\$className for any of the parent namespaces: "
-                . implode(', ', $this->_overloaders));
+        if (is_array($className) && (! is_callable($className))) {
+            if ($arguments) {
+                throw new LoadException('Create() with an array $className cannot have any other arguments.');
+            }
+
+            $classTmp  = array_shift($className);
+            $arguments = $className;
+            $className = $classTmp;
         }
 
-        $object = new $class(...$arguments);
+        if (is_callable($className) && (! method_exists($className, '__invoke'))) {
+            $className = call_user_func_array($className, $arguments);
+        }
+
+        if (is_object($className)) {
+            $object = $className;
+        } else {
+            $class = $this->find($className);
+            if (! $class) {
+                throw new LoadException("Create() could not load class .\\$className for any of the parent namespaces: "
+                    . implode(', ', $this->_overloaders));
+            }
+
+            $object = new $class(...$arguments);
+        }
 
         if ($object instanceof TargetInterface) {
             $this->applyToTarget($object);
@@ -200,11 +249,11 @@ class ProjectOverloader
         }
         foreach ($loaderFactories as $name => $creator) {
             if (is_string($creator)) {
-                $factor = $this->creatorForServiceManager($creator);
+                $factor = $this->serviceManagerFactory($creator);
             } elseif (is_array($creator)) {
                 $class  = array_shift($creator);
                 $args   = array_shift($creator);
-                $factor = $this->creatorForServiceManager($class, ...$args);
+                $factor = $this->serviceManagerFactory($class, ...$args);
             } else {
                 $factor = $creator;
             }
@@ -220,20 +269,23 @@ class ProjectOverloader
     }
 
     /**
-     * Loads the given class or interface.
+     * Creates a copy of this overloader, but working on a sub folder
      *
-     * @param  string    $className The name of the class, minus the prefix
-     * @param  array     $arguments Class loadiung arguments
-     * @return object    The created object
-     * @throws LoadException
+     * @param string $subFolder
+     * @return \self
      */
-    public function creatorForServiceManager($className, ...$arguments)
+    public function createSubFolderOverloader($subFolder)
     {
-        $this->find($className);
-        $loader = $this;
-        return function () use ($loader, $className, $arguments) {
-            return $loader->create($className, ...$arguments);
-        };
+        $overloaders = [];
+        foreach ($this->_overloaders as $folder) {
+            $overloaders[] = $folder . DIRECTORY_SEPARATOR . $subFolder;
+        }
+
+        $ol = new self($overloaders, false);
+        if ($this->_serviceManager instanceof ServiceLocatorInterface) {
+            $ol->setServiceManager($this->_serviceManager);
+        }
+        return $ol;
     }
 
     /**
@@ -341,6 +393,23 @@ class ProjectOverloader
     public function requireServiceManager()
     {
         return $this->_requireServiceManager;
+    }
+
+    /**
+     * Creates an object loader for the service manager
+     *
+     * @param  string    $className The name of the class, minus the prefix
+     * @param  array     $arguments Class loadiung arguments
+     * @return object    The created object
+     * @throws LoadException
+     */
+    public function serviceManagerFactory($className, ...$arguments)
+    {
+        $this->find($className);
+        $loader = $this;
+        return function () use ($loader, $className, $arguments) {
+            return $loader->create($className, ...$arguments);
+        };
     }
 
     /**
