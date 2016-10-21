@@ -1,4 +1,4 @@
-# Zend Alternative Project overloader
+# Zend Alternative Project Overloader
 
 This module allows you to program you library / core application and allow projects using using that
 code to create their own sub-classes and have those loaded instead of the original project.
