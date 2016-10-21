@@ -8,12 +8,14 @@
  * @copyright  Copyright (c) 2016 MagnaFacta
  * @license    New BSD License
  */
+
 namespace Zalt\Loader;
 
 use Zalt\Loader\Exception\LoadException;
 use Zalt\Loader\Target\TargetInterface;
 
 use Zend\ServiceManager\ServiceLocatorInterface;
+use Zend\ServiceManager\ServiceManager;
 
 /**
  *
@@ -152,7 +154,7 @@ class ProjectOverloader
     {
         $class = $this->find($className);
         if (! $class) {
-            throw new LoadException("Xreate not load class .\\$className for any of the parent namespaces: "
+            throw new LoadException("Create counld not load class .\\$className for any of the parent namespaces: "
                 . implode(', ', $this->_overloaders));
         }
 
@@ -166,6 +168,75 @@ class ProjectOverloader
     }
 
     /**
+     * Create a service manager using a simpler syntax to create factory objects created
+     * though this loader.
+     *
+     * See the example for the possibilities:
+     * <code>
+     * $this->createServiceManager([
+     *      'ob1' => 'Overloaded\\Class\\Created\\Without\\Arguments',
+     *      'ob2' => 'Zend\Full\\Class\\Created\\Without\\Arguments',
+     *      'ob3' => ['Overloaded\\Class\\Created\\With\\Arguments', ['Arg1', 'Arg2]],
+     *      'ob4' => new InvokableFactoryEtcClass('x', 'y'),
+     *      'ob5' => funtion () { return new stdClass() },
+     * ]);
+     * </code>
+     *
+     * This loader is automatically set as the loader
+     *
+     * This function also sets the service manager for this object if it was not yet set.
+     *
+     * @param array  $loaderFactories      string => string=classname|array[classname, params]|factory object
+     * @param array  $serviceManagerConfig An optional full configuration array for the service manager,
+     *                                     the previous $loaderFactories are added to this array.
+     * @param string $loaderName           Name used to set this object to if not already set in the array. Disable
+     *                                     this function by setting it to null or false.
+     * @return ServiceManager
+     */
+    public function createServiceManager(array $loaderFactories = [], array $serviceManagerConfig = [], $loaderName = 'loader')
+    {
+        if ($loaderName && (! isset($serviceManagerConfig['services'][$loaderName]))) {
+            $serviceManagerConfig['services'][$loaderName] = $this;
+        }
+        foreach ($loaderFactories as $name => $creator) {
+            if (is_string($creator)) {
+                $factor = $this->creatorForServiceManager($creator);
+            } elseif (is_array($creator)) {
+                $class  = array_shift($creator);
+                $args   = array_shift($creator);
+                $factor = $this->creatorForServiceManager($class, ...$args);
+            } else {
+                $factor = $creator;
+            }
+            $serviceManagerConfig['factories'][$name] = $factor;
+        }
+        $sm = $this->create('ServiceManager\\ServiceManager', $serviceManagerConfig);
+
+        if (! $this->_serviceManager) {
+            $this->_serviceManager = $sm;
+        }
+
+        return $sm;
+    }
+
+    /**
+     * Loads the given class or interface.
+     *
+     * @param  string    $className The name of the class, minus the prefix
+     * @param  array     $arguments Class loadiung arguments
+     * @return object    The created object
+     * @throws LoadException
+     */
+    public function creatorForServiceManager($className, ...$arguments)
+    {
+        $this->find($className);
+        $loader = $this;
+        return function () use ($loader, $className, $arguments) {
+            return $loader->create($className, ...$arguments);
+        };
+    }
+
+    /**
      * Finds the given class or interface.
      *
      * @param  string $className The name of the class, minus the prefix
@@ -175,6 +246,11 @@ class ProjectOverloader
     public function find($className)
     {
         $verbose = $this->verbose || $this->verboseLoad;
+
+        // Return full class specifications at once
+        if (class_exists($className, true)) {
+            return $className;
+        }
 
         foreach ($this->_overloaders as $prefix) {
             $class = $prefix . '\\' . $className;
@@ -287,6 +363,10 @@ class ProjectOverloader
     public function setServiceManager(ServiceLocatorInterface $serviceManager)
     {
         $this->_serviceManager = $serviceManager;
+
+        if (($serviceManager instanceof ServiceManager) && (! $serviceManager->has('loader'))) {
+            $serviceManager->setService('loader', $this);
+        }
 
         return $this;
     }
