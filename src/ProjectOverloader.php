@@ -278,7 +278,7 @@ class ProjectOverloader
     {
         $overloaders = [];
         foreach ($this->_overloaders as $folder) {
-            $overloaders[] = $folder . DIRECTORY_SEPARATOR . $subFolder;
+            $overloaders[] = $folder . '\\' . $subFolder;
         }
 
         $ol = new self($overloaders, false);
