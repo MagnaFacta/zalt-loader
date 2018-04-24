@@ -42,6 +42,14 @@ class ProjectOverloader
      */
     public $legacyClasses = false;
 
+        /**
+     * Prefix for legacy class names registered in the servicemanager.
+     * For projects where such aliases can cause overlap (e.g. Should Zend DB1 or DB2 be used)
+     *
+     * @var string
+     */
+    public $legacyPrefix;
+
     /**
      *
      * @var boolean
@@ -116,6 +124,37 @@ class ProjectOverloader
         $this->setOverloaders($overloaders + $this->_overloaders);
 
         return $this;
+    }
+
+    public function applyToLegacyTarget(\MUtil_Registry_TargetInterface $target)
+    {
+        if (! $this->_serviceManager instanceof ServiceLocatorInterface) {
+            if ($this->_requireServiceManager) {
+                throw new LoadException("Calling applyToTarget while ServiceManager is not set.");
+            }
+
+            return false;
+        }
+
+        $verbose = $this->verbose || $this->verboseTarget;
+
+        foreach ($target->getRegistryRequests() as $name) {
+            $className = ucfirst($name);
+            if ($this->legacyPrefix) {
+                $className = $this->legacyPrefix . $className;
+            }
+            if ($this->_serviceManager->has($className)) {
+                $target->answerRegistryRequest($name, $this->_serviceManager->get($className));
+            } elseif ($verbose) {
+                echo "Could not find target name: $name\n";
+            }
+        }
+
+        $output = $target->checkRegistryRequestsAnswers();
+
+        $target->afterRegistry();
+
+        return $output;
     }
 
     /**
@@ -219,6 +258,10 @@ class ProjectOverloader
 
         if ($object instanceof TargetInterface) {
             $this->applyToTarget($object);
+        }
+
+        if ($this->legacyClasses && $object instanceof \MUtil_Registry_TargetInterface) {
+            $this->applyToLegacyTarget($object);
         }
 
         return $object;
