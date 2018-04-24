@@ -34,6 +34,14 @@ class ProjectOverloader
      */
     private static $_instance;
 
+
+    /**
+     * find classes with the old '_' namespace notation
+     *
+     * @var boolean
+     */
+    public $legacyClasses = false;
+
     /**
      *
      * @var boolean
@@ -120,7 +128,7 @@ class ProjectOverloader
     {
         if (! $this->_serviceManager instanceof ServiceLocatorInterface) {
             if ($this->_requireServiceManager) {
-                throw new LoadException("Calling applyToTarger while ServiceManager is not set.");
+                throw new LoadException("Calling applyToTarget while ServiceManager is not set.");
             }
 
             return false;
@@ -277,6 +285,13 @@ class ProjectOverloader
     public function createSubFolderOverloader($subFolder)
     {
         $overloaders = [];
+
+        if ($this->legacyClasses) {
+            foreach ($this->_overloaders as $folder) {
+                $overloaders[] = $folder . '_' . $subFolder;
+            }
+        }
+
         foreach ($this->_overloaders as $folder) {
             $overloaders[] = $folder . '\\' . $subFolder;
         }
@@ -284,6 +299,7 @@ class ProjectOverloader
         $ol = new self($overloaders, false);
         if ($this->_serviceManager instanceof ServiceLocatorInterface) {
             $ol->setServiceManager($this->_serviceManager);
+            $ol->legacyClasses = $this->legacyClasses;
         }
         return $ol;
     }
@@ -305,14 +321,24 @@ class ProjectOverloader
         }
 
         foreach ($this->_overloaders as $prefix) {
-            $class = $prefix . '\\' . $className;
-
+            $class = '\\' . $prefix . '\\' . $className;
             if ($verbose) {
                 echo "Load attempt $class\n";
             }
+
+            if ($this->legacyClasses) {
+                $legacyClass = '\\' . $prefix . '_' . ucfirst($className);
+                if (class_exists($legacyClass, true)) {
+                    if ($verbose) {
+                        echo "Load successful! $class\n";
+                    }
+                    return $legacyClass;
+                }
+            }
+
             if (class_exists($class, true)) {
                 if ($verbose) {
-                    echo "Load succesful!\n";
+                    echo "Load successful! $class\n";
                 }
                 return $class;
             }
