@@ -343,6 +343,7 @@ class ProjectOverloader
         if ($this->_serviceManager instanceof ServiceLocatorInterface) {
             $ol->setServiceManager($this->_serviceManager);
             $ol->legacyClasses = $this->legacyClasses;
+            $ol->legacyPrefix = $this->legacyPrefix;
         }
         return $ol;
     }
