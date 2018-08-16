@@ -26,10 +26,11 @@
             "Zalt\\Loader\\": "src"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "Zalt\\Loader\\": "test\\Zalt\\Loader"
+        }
+    },
     "repositories": [
-		{
-		  "type": "git",
-		  "url": "https://github.com/GemsTracker/hl7.git"
-		}
     ]
 }
