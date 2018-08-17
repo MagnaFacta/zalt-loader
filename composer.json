@@ -28,7 +28,10 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Zalt\\Loader\\": "test\\Zalt\\Loader"
+            "Zalt\\Loader\\": "test\\Zalt\\Loader",
+            "Test1\\": "test\\Test1",
+            "Test2\\": "test\\Test2",
+            "Test3\\": "test\\Test3"
         }
     },
     "repositories": [
