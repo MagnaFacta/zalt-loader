@@ -12,14 +12,14 @@
          verbose="true"
          strict="true">
     <testsuite>
-        <directory>MUtil</directory>
+        <directory>zalt-loader</directory>
     </testsuite>
     <filter>
         <whitelist>
-            <directory suffix=".php">../src/MUtil</directory>
+            <directory suffix=".php">../src</directory>
         </whitelist>
     </filter>
     <logging>
-        <log type="coverage-clover" target="build/logs/clover.xml"/>
+        <log type="coverage-clover" target="../build/logs/clover.xml"/>
     </logging>
 </phpunit>
