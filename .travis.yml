@@ -30,8 +30,8 @@ script:
     then vendor/bin/phpunit --configuration test/phpunit.xml --coverage-clover build/logs/clover.xml;
     else vendor/bin/phpunit --configuration test/phpunit.xml;
     fi
-    pwd 
-    ls
+    pwd;
+    ls;
 
 after_script:
   - if [[ "$WITH_COVERAGE" == "true" ]]; then 
