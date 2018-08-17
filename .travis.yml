@@ -27,8 +27,8 @@ before_script:
 # omitting "script:" will default to phpunit
 script: 
   - if [[ "$WITH_COVERAGE" == "true" ]];
-    then vendor/bin/phpunit --configuration test/phpunit.xml --coverage-clover build/logs/clover.xml;
-    else ls vendor; ls vendor/bin; vendor/bin/phpunit --configuration test/phpunit.xml;
+    then vendor/bin/phpunit --configuration test/phpunit.xml --coverage-clover build/logs/clover.xml test;
+    else vendor/bin/phpunit --configuration test/phpunit.xml test;
     fi
 
 after_script:
