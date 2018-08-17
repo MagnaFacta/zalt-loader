@@ -21,8 +21,10 @@ before_script:
         curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter;
         chmod +x ./cc-test-reporter;
         ./cc-test-reporter before-build;
+        pwd;
+        ls;
     fi
-  
+    
 
 # omitting "script:" will default to phpunit
 script: 
@@ -30,8 +32,6 @@ script:
     then vendor/bin/phpunit --configuration test/phpunit.xml --coverage-clover build/logs/clover.xml;
     else vendor/bin/phpunit --configuration test/phpunit.xml;
     fi
-    pwd;
-    ls;
 
 after_script:
   - if [[ "$WITH_COVERAGE" == "true" ]]; then 
