@@ -1,5 +1,7 @@
 # Zend Alternative Project Overloader
 
+[![Build Status](https://travis-ci.org/MagnaFacta/zalt-loader.svg?branch=master)](https://travis-ci.org/MagnaFacta/zalt-loader)
+
 This module allows you to program you library / core application and allow projects using using that
 code to create their own sub-classes and have those loaded instead of the original project.
 
