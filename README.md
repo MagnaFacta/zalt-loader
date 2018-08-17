@@ -17,3 +17,5 @@ For example
 This code will create a new `Zend\EventManager\EventManager` with `$config` as parameter, unless you have
 created a `MyProject2\EventManager\EventManager` then that will be loaded. When you have (also) created
 a `MyProject1\EventManager\EventManager` then that class will be loaded.
+
+For code quality check [Code climate](https://codeclimate.com/github/MagnaFacta/zalt-loader).

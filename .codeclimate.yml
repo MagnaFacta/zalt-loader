@@ -3,8 +3,6 @@ engines:
     enabled: true
   phpmd:
     enabled: true
-    config:
-      rulesets: tests/phpmdruleset.xml
 ratings:
   paths:
   - "**.php"
