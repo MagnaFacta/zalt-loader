@@ -259,13 +259,13 @@ class ProjectOverloader
             }
             $serviceManagerConfig['factories'][$name] = $factor;
         }
-        $sm = $this->create('ServiceManager\\ServiceManager', $serviceManagerConfig);
+        $serviceManager = $this->create('ServiceManager\\ServiceManager', $serviceManagerConfig);
 
         if (! $this->_serviceManager) {
-            $this->_serviceManager = $sm;
+            $this->_serviceManager = $serviceManager;
         }
 
-        return $sm;
+        return $serviceManager;
     }
 
     /**
@@ -297,24 +297,24 @@ class ProjectOverloader
      */
     public function find($className)
     {
-        $verbose = $this->verbose || $this->verboseLoad;
-
-        // Return full class specifications at once
+        // Return full class specifications immediately
         if (class_exists($className, true)) {
             return $className;
         }
 
+        $verbose = $this->verbose || $this->verboseLoad;
+
         foreach ($this->_overloaders as $prefix) {
             $class = $prefix . '\\' . $className;
 
-            if ($verbose) {
-                echo "Load attempt $class\n";
-            }
             if (class_exists($class, true)) {
                 if ($verbose) {
-                    echo "Load succesful!\n";
+                    echo "Load attempt $class succesful!\n";
                 }
                 return $class;
+
+            } elseif ($verbose) {
+                echo "Load attempt $class failed\n";
             }
         }
 
