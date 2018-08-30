@@ -34,6 +34,22 @@ class ProjectOverloader
      */
     private static $_instance;
 
+
+    /**
+     * find classes with the old '_' namespace notation
+     *
+     * @var boolean
+     */
+    public $legacyClasses = false;
+
+        /**
+     * Prefix for legacy class names registered in the servicemanager.
+     * For projects where such aliases can cause overlap (e.g. Should Zend DB1 or DB2 be used)
+     *
+     * @var string
+     */
+    public $legacyPrefix;
+
     /**
      *
      * @var boolean
@@ -110,6 +126,37 @@ class ProjectOverloader
         return $this;
     }
 
+    public function applyToLegacyTarget(\MUtil_Registry_TargetInterface $target)
+    {
+        if (! $this->_serviceManager instanceof ServiceLocatorInterface) {
+            if ($this->_requireServiceManager) {
+                throw new LoadException("Calling applyToTarget while ServiceManager is not set.");
+            }
+
+            return false;
+        }
+
+        $verbose = $this->verbose || $this->verboseTarget;
+
+        foreach ($target->getRegistryRequests() as $name) {
+            $className = ucfirst($name);
+            if ($this->legacyPrefix) {
+                $className = $this->legacyPrefix . $className;
+            }
+            if ($this->_serviceManager->has($className)) {
+                $target->answerRegistryRequest($name, $this->_serviceManager->get($className));
+            } elseif ($verbose) {
+                echo "Could not find target name: $name\n";
+            }
+        }
+
+        $output = $target->checkRegistryRequestsAnswers();
+
+        $target->afterRegistry();
+
+        return $output;
+    }
+
     /**
      *
      * @param TargetInterface $target
@@ -120,7 +167,7 @@ class ProjectOverloader
     {
         if (! $this->_serviceManager instanceof ServiceLocatorInterface) {
             if ($this->_requireServiceManager) {
-                throw new LoadException("Calling applyToTarger while ServiceManager is not set.");
+                throw new LoadException("Calling applyToTarget while ServiceManager is not set.");
             }
 
             return false;
@@ -213,6 +260,10 @@ class ProjectOverloader
             $this->applyToTarget($object);
         }
 
+        if ($this->legacyClasses && $object instanceof \MUtil_Registry_TargetInterface) {
+            $this->applyToLegacyTarget($object);
+        }
+
         return $object;
     }
 
@@ -277,6 +328,13 @@ class ProjectOverloader
     public function createSubFolderOverloader($subFolder)
     {
         $overloaders = [];
+
+        if ($this->legacyClasses) {
+            foreach ($this->_overloaders as $folder) {
+                $overloaders[] = $folder . '_' . $subFolder;
+            }
+        }
+
         foreach ($this->_overloaders as $folder) {
             $overloaders[] = $folder . '\\' . $subFolder;
         }
@@ -284,6 +342,8 @@ class ProjectOverloader
         $ol = new self($overloaders, false);
         if ($this->_serviceManager instanceof ServiceLocatorInterface) {
             $ol->setServiceManager($this->_serviceManager);
+            $ol->legacyClasses = $this->legacyClasses;
+            $ol->legacyPrefix = $this->legacyPrefix;
         }
         return $ol;
     }
@@ -305,11 +365,24 @@ class ProjectOverloader
         $verbose = $this->verbose || $this->verboseLoad;
 
         foreach ($this->_overloaders as $prefix) {
-            $class = $prefix . '\\' . $className;
+            $class = '\\' . $prefix . '\\' . $className;
+            if ($verbose) {
+                echo "Load attempt $class\n";
+            }
+
+            if ($this->legacyClasses) {
+                $legacyClass = '\\' . $prefix . '_' . ucfirst($className);
+                if (class_exists($legacyClass, true)) {
+                    if ($verbose) {
+                        echo "Load successful! $class\n";
+                    }
+                    return $legacyClass;
+                }
+            }
 
             if (class_exists($class, true)) {
                 if ($verbose) {
-                    echo "Load attempt $class succesful!\n";
+                    echo "Load attempt successful! $class\n";
                 }
                 return $class;
 
