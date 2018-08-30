@@ -79,11 +79,13 @@ class BasicLoaderTest extends \PHPUnit_Framework_TestCase
     public function providerLoadOldClass()
     {
         return [
-            ['Test1', 'Legacy1'],
-            ['Test2', 'Legacy2'],
-            ['Test3', 'Legacy3'],
-            ['Test3', 'Sub_SubLegacy3'],
-            ['Test3', 'Sub\\SubLegacy3'],
+            ['\\Test1_', 'Legacy1'],
+            ['\\Test2_', 'Legacy2'],
+            ['\\Test3_', 'Legacy3'],
+            ['\\Test3_', 'Sub_SubLegacy3'],
+            // Namespaced should still work
+            ['Test3\\', 'OnlyIn3'], // Non
+            ['Test3\\', 'Sub\\SubOnlyIn3'], // Non
         ];
     }
 
@@ -156,8 +158,9 @@ class BasicLoaderTest extends \PHPUnit_Framework_TestCase
         $loader = $this->getBasicProjectOverloader();
         $loader->legacyClasses = true;
 
+        // $loader->verbose = true;
         $class  = $loader->find($subClass);
-        $this->assertEquals($class, '\\' . strtr($namespace . '_' . $subClass, '\\', '_'));
+        $this->assertEquals($class, $namespace . $subClass);
     }
 
     /**
@@ -186,14 +189,14 @@ class BasicLoaderTest extends \PHPUnit_Framework_TestCase
      */
     public function testLoadSubOldClass($namespace, $subFolder, $subClass)
     {
-        $loader1 = $this->getBasicProjectOverloader();
-        $loader1->legacyClasses = true;
-        $loader2 = $loader1->createSubFolderOverloader($subFolder);
+        $loaderMain = $this->getBasicProjectOverloader();
+        $loaderMain->legacyClasses = true;
+        $loaderSub  = $loaderMain->createSubFolderOverloader($subFolder);
 
-        $this->assertEquals($loader1->legacyClasses, $loader2->legacyClasses);
-        $this->assertEquals($loader1->legacyPrefix, $loader2->legacyPrefix);
+        $this->assertEquals($loaderMain->legacyClasses, $loaderSub->legacyClasses);
+        $this->assertEquals($loaderMain->legacyPrefix,  $loaderSub->legacyPrefix);
 
-        $class  = $loader2->find($subClass);
+        $class = $loaderSub->find($subClass);
         $this->assertEquals($class, '\\' . strtr($namespace . '_' . $subFolder . '_' . $subClass, '\\' , '_'));
     }
 }

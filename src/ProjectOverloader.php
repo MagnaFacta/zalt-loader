@@ -86,7 +86,7 @@ class ProjectOverloader
     public $verboseLoad = false;
 
     /**
-     * Show all unsuccesful target set attempts
+     * Show all unsuccessful target set attempts
      *
      * @var boolean
      */
@@ -367,39 +367,56 @@ class ProjectOverloader
         }
 
         $verbose = $this->verbose || $this->verboseLoad;
+        // echo "[$verbose] [" . $this->verbose . "] [" . $this->verboseLoad . "]\n";
 
         foreach ($this->overloaders as $prefix) {
-            $class = $prefix . '\\' . $className;
-            if ($verbose) {
-                echo "Load attempt $class\n";
-            }
-
-            if ($this->legacyClasses) {
-                $legacyClass = '\\' . strtr($class, '\\', '_');
-                if ($verbose) {
-                    echo "Load attempt $legacyClass\n";
-                }
-                if (class_exists($legacyClass, true)) {
-                    if ($verbose) {
-                        echo "Load successful! $class\n";
-                    }
-                    return $legacyClass;
-                }
-            }
-
-            if (class_exists($class, true)) {
-                if ($verbose) {
-                    echo "Load attempt successful! $class\n";
-                }
+            $class = $this->findForPrefix($className, $prefix, $verbose);
+            if ($class) {
                 return $class;
-
-            } elseif ($verbose) {
-                echo "Load attempt $class failed\n";
             }
         }
 
         throw new LoadException("Could not load class .\\$className for any of the parent namespaces: "
             . implode(', ', $this->overloaders));
+    }
+
+    /**
+     *
+     * @param string $className
+     * @param string $prefix
+     * @param boolean $verbose
+     * @return string
+     */
+    protected function findForPrefix($className, $prefix, $verbose)
+    {
+        $class = $prefix . '\\' . $className;
+        if ($verbose) {
+            echo "Load attempt $class\n";
+        }
+
+        if (class_exists($class, true)) {
+            if ($verbose) {
+                echo "Load attempt successful! $class\n";
+            }
+            return $class;
+        }
+
+        if ($this->legacyClasses) {
+            $legacyClass = '\\' . strtr($class, '\\', '_');
+            if ($verbose) {
+                echo "Load attempt $legacyClass\n";
+            }
+            if (class_exists($legacyClass, true)) {
+                if ($verbose) {
+                    echo "Load successful! $legacyClass\n";
+                }
+                return $legacyClass;
+            }
+        }
+
+        if ($verbose) {
+            echo "Load attempt $class failed\n";
+        }
     }
 
     /**
@@ -422,15 +439,6 @@ class ProjectOverloader
     public function getOverloaders()
     {
         return $this->overloaders;
-    }
-
-    /**
-     *
-     * @return boolean True when project overloading is enabled
-     */
-    public function getOverloading()
-    {
-        return $this->_enabled;
     }
 
     /**
@@ -461,16 +469,6 @@ class ProjectOverloader
      * @return \Zalt\Loader\ProjectOverloader
      */
     public function isServiceManagerRequired()
-    {
-        return $this->requireServiceManager;
-    }
-
-    /**
-     * Is a service managers required when used.
-     *
-     * @return boolean
-     */
-    public function requireServiceManager()
     {
         return $this->requireServiceManager;
     }
