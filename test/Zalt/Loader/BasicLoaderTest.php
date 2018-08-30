@@ -107,7 +107,7 @@ class BasicLoaderTest extends \PHPUnit_Framework_TestCase
         $loader = $this->getBasicProjectOverloader();
         $class =  $loader->create($subClass);
         foreach ($instances as $instance) {
-            $this->assertEquals(true, $class instanceof $instance);
+            $this->assertInstanceOf($instance, $class);
         }
     }
 }
