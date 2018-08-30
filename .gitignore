@@ -1,2 +1,5 @@
-nbproject/
-/nbproject
+composer.phar
+/vendor/
+/nbproject/
+/composer.lock
+/test/build/logs

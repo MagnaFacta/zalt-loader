@@ -1,5 +1,7 @@
 # Zend Alternative Project Overloader
 
+[![Build Status](https://travis-ci.org/MagnaFacta/zalt-loader.svg?branch=master)](https://travis-ci.org/MagnaFacta/zalt-loader)
+
 This module allows you to program you library / core application and allow projects using using that
 code to create their own sub-classes and have those loaded instead of the original project.
 
@@ -15,3 +17,5 @@ For example
 This code will create a new `Zend\EventManager\EventManager` with `$config` as parameter, unless you have
 created a `MyProject2\EventManager\EventManager` then that will be loaded. When you have (also) created
 a `MyProject1\EventManager\EventManager` then that class will be loaded.
+
+For code quality check [Code climate](https://codeclimate.com/github/MagnaFacta/zalt-loader).

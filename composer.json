@@ -8,7 +8,7 @@
         "zendframework/zend-servicemanager": ">=3.1"
     },
     "require-dev": {
-        "phpunit/phpunit": "3.7.*"
+        "phpunit/phpunit": "4.*"
     },
     "authors": [
         {
@@ -26,10 +26,14 @@
             "Zalt\\Loader\\": "src"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "Zalt\\Loader\\": "test\\Zalt\\Loader",
+            "Test1\\": "test\\Test1",
+            "Test2\\": "test\\Test2",
+            "Test3\\": "test\\Test3"
+        }
+    },
     "repositories": [
-		{
-		  "type": "git",
-		  "url": "https://github.com/GemsTracker/hl7.git"
-		}
     ]
 }
