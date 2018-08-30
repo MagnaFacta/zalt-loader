@@ -32,8 +32,7 @@ class ProjectOverloader
      *
      * @var ProjectOverloader
      */
-    private static $_instance;
-
+    private static $instanceOfSelf;
 
     /**
      * find classes with the old '_' namespace notation
@@ -42,8 +41,8 @@ class ProjectOverloader
      */
     public $legacyClasses = false;
 
-        /**
-     * Prefix for legacy class names registered in the servicemanager.
+    /**
+     * Prefix for legacy class names registered in the service manager.
      * For projects where such aliases can cause overlap (e.g. Should Zend DB1 or DB2 be used)
      *
      * @var string
@@ -51,26 +50,26 @@ class ProjectOverloader
     public $legacyPrefix;
 
     /**
-     *
-     * @var boolean
-     */
-    protected $_requireServiceManager = true;
-
-    /**
      * Array Prefix => Prefix of classes possibly overloaded
      *
      * @var array
      */
-    protected $_overloaders = array(
+    protected $overloaders = array(
         'Zalt' => 'Zalt',
         'Zend' => 'Zend',
         );
 
     /**
      *
+     * @var boolean
+     */
+    protected $requireServiceManager = true;
+
+    /**
+     *
      * @var ServiceLocatorInterface
      */
-    protected $_serviceManager;
+    protected $serviceManager;
 
     /**
      * Global overrule verbose switch
@@ -87,7 +86,7 @@ class ProjectOverloader
     public $verboseLoad = false;
 
     /**
-     * Show all unsuccesful targer set attempts
+     * Show all unsuccesful target set attempts
      *
      * @var boolean
      */
@@ -100,9 +99,9 @@ class ProjectOverloader
      */
     public function __construct(array $overloaders = array(), $add = true)
     {
-        if (! self::$_instance instanceof self) {
+        if (! self::$instanceOfSelf instanceof self) {
             // Only set for initial overloader
-            self::$_instance = $this;
+            self::$instanceOfSelf = $this;
         }
 
         if ($overloaders) {
@@ -121,15 +120,15 @@ class ProjectOverloader
      */
     public function addOverloaders(array $overloaders = array())
     {
-        $this->setOverloaders($overloaders + $this->_overloaders);
+        $this->setOverloaders($overloaders + $this->overloaders);
 
         return $this;
     }
 
     public function applyToLegacyTarget(\MUtil_Registry_TargetInterface $target)
     {
-        if (! $this->_serviceManager instanceof ServiceLocatorInterface) {
-            if ($this->_requireServiceManager) {
+        if (! $this->serviceManager instanceof ServiceLocatorInterface) {
+            if ($this->requireServiceManager) {
                 throw new LoadException("Calling applyToTarget while ServiceManager is not set.");
             }
 
@@ -143,8 +142,8 @@ class ProjectOverloader
             if ($this->legacyPrefix) {
                 $className = $this->legacyPrefix . $className;
             }
-            if ($this->_serviceManager->has($className)) {
-                $target->answerRegistryRequest($name, $this->_serviceManager->get($className));
+            if ($this->serviceManager->has($className)) {
+                $target->answerRegistryRequest($name, $this->serviceManager->get($className));
             } elseif ($verbose) {
                 echo "Could not find target name: $name\n";
             }
@@ -165,8 +164,8 @@ class ProjectOverloader
      */
     public function applyToTarget(TargetInterface $target)
     {
-        if (! $this->_serviceManager instanceof ServiceLocatorInterface) {
-            if ($this->_requireServiceManager) {
+        if (! $this->serviceManager instanceof ServiceLocatorInterface) {
+            if ($this->requireServiceManager) {
                 throw new LoadException("Calling applyToTarget while ServiceManager is not set.");
             }
 
@@ -176,8 +175,8 @@ class ProjectOverloader
         $verbose = $this->verbose || $this->verboseTarget;
 
         foreach ($target->getRegistryRequests() as $name) {
-            if ($this->_serviceManager->has($name)) {
-                $target->answerRegistryRequest($name, $this->_serviceManager->get($name));
+            if ($this->serviceManager->has($name)) {
+                $target->answerRegistryRequest($name, $this->serviceManager->get($name));
             } elseif ('loader' == $name) {
                 $target->answerRegistryRequest($name, $this);
             } elseif ($verbose) {
@@ -250,7 +249,7 @@ class ProjectOverloader
             $class = $this->find($className);
             if (! $class) {
                 throw new LoadException("Create() could not load class .\\$className for any of the parent namespaces: "
-                    . implode(', ', $this->_overloaders));
+                    . implode(', ', $this->overloaders));
             }
 
             $object = new $class(...$arguments);
@@ -312,8 +311,8 @@ class ProjectOverloader
         }
         $serviceManager = $this->create('ServiceManager\\ServiceManager', $serviceManagerConfig);
 
-        if (! $this->_serviceManager) {
-            $this->_serviceManager = $serviceManager;
+        if (! $this->serviceManager) {
+            $this->serviceManager = $serviceManager;
         }
 
         return $serviceManager;
@@ -330,22 +329,27 @@ class ProjectOverloader
         $overloaders = [];
 
         if ($this->legacyClasses) {
-            foreach ($this->_overloaders as $folder) {
+            foreach ($this->overloaders as $folder) {
                 $overloaders[] = $folder . '_' . $subFolder;
             }
         }
 
-        foreach ($this->_overloaders as $folder) {
+        foreach ($this->overloaders as $folder) {
             $overloaders[] = $folder . '\\' . $subFolder;
         }
 
-        $ol = new self($overloaders, false);
-        if ($this->_serviceManager instanceof ServiceLocatorInterface) {
-            $ol->setServiceManager($this->_serviceManager);
-            $ol->legacyClasses = $this->legacyClasses;
-            $ol->legacyPrefix = $this->legacyPrefix;
+        $subOverloader = new self($overloaders, false);
+        if ($this->legacyClasses) {
+            $subOverloader->legacyClasses = true;
+            $subOverloader->legacyPrefix  = $this->legacyPrefix;
         }
-        return $ol;
+
+        if ($this->serviceManager instanceof ServiceLocatorInterface) {
+            $subOverloader->setServiceManager($this->serviceManager);
+            $subOverloader->legacyClasses = $this->legacyClasses;
+            $subOverloader->legacyPrefix = $this->legacyPrefix;
+        }
+        return $subOverloader;
     }
 
     /**
@@ -364,14 +368,17 @@ class ProjectOverloader
 
         $verbose = $this->verbose || $this->verboseLoad;
 
-        foreach ($this->_overloaders as $prefix) {
-            $class = '\\' . $prefix . '\\' . $className;
+        foreach ($this->overloaders as $prefix) {
+            $class = $prefix . '\\' . $className;
             if ($verbose) {
                 echo "Load attempt $class\n";
             }
 
             if ($this->legacyClasses) {
-                $legacyClass = '\\' . $prefix . '_' . ucfirst($className);
+                $legacyClass = '\\' . strtr($class, '\\', '_');
+                if ($verbose) {
+                    echo "Load attempt $legacyClass\n";
+                }
                 if (class_exists($legacyClass, true)) {
                     if ($verbose) {
                         echo "Load successful! $class\n";
@@ -392,7 +399,7 @@ class ProjectOverloader
         }
 
         throw new LoadException("Could not load class .\\$className for any of the parent namespaces: "
-            . implode(', ', $this->_overloaders));
+            . implode(', ', $this->overloaders));
     }
 
     /**
@@ -401,11 +408,11 @@ class ProjectOverloader
      */
     public static function getInstance()
     {
-        if (! self::$_instance instanceof ProjectOverloader) {
+        if (! self::$instanceOfSelf instanceof ProjectOverloader) {
             new ProjectOverloader();
         }
 
-        return self::$_instance;
+        return self::$instanceOfSelf;
     }
 
     /**
@@ -414,7 +421,7 @@ class ProjectOverloader
      */
     public function getOverloaders()
     {
-        return $this->_overloaders;
+        return $this->overloaders;
     }
 
     /**
@@ -433,7 +440,7 @@ class ProjectOverloader
      */
     public function getServiceManager()
     {
-        return $this->_serviceManager;
+        return $this->serviceManager;
     }
 
     /**
@@ -443,7 +450,7 @@ class ProjectOverloader
      */
     public function ignoreMissingServiceManager()
     {
-        $this->_requireServiceManager = false;
+        $this->requireServiceManager = false;
 
         return $this;
     }
@@ -455,7 +462,7 @@ class ProjectOverloader
      */
     public function isServiceManagerRequired()
     {
-        return $this->_requireServiceManager;
+        return $this->requireServiceManager;
     }
 
     /**
@@ -465,7 +472,7 @@ class ProjectOverloader
      */
     public function requireServiceManager()
     {
-        return $this->_requireServiceManager;
+        return $this->requireServiceManager;
     }
 
     /**
@@ -492,7 +499,7 @@ class ProjectOverloader
      */
     public function setOverloaders(array $overloaders = array())
     {
-        $this->_overloaders = array_combine($overloaders, $overloaders);
+        $this->overloaders = array_combine($overloaders, $overloaders);
 
         return $this;
     }
@@ -504,7 +511,7 @@ class ProjectOverloader
      */
     public function setServiceManager(ServiceLocatorInterface $serviceManager)
     {
-        $this->_serviceManager = $serviceManager;
+        $this->serviceManager = $serviceManager;
 
         if (($serviceManager instanceof ServiceManager) && (! $serviceManager->has('loader'))) {
             $serviceManager->setService('loader', $this);

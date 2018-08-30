@@ -27,6 +27,12 @@
         }
     },
     "autoload-dev": {
+        "psr-0": {
+            "Zalt_Loader_": "test",
+            "Test1_": "test",
+            "Test2_": "test",
+            "Test3_": "test"
+        },
         "psr-4": {
             "Zalt\\Loader\\": "test\\Zalt\\Loader",
             "Test1\\": "test\\Test1",

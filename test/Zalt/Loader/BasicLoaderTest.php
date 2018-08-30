@@ -57,6 +57,7 @@ class BasicLoaderTest extends \PHPUnit_Framework_TestCase
             ['Test2', 'OnlyIn2'],
             ['Test3', 'OnlyIn3'],
             ['Test3', 'In3and2and1'],
+            ['Test3', 'Sub\\SubOnlyIn3'],
         ];
     }
 
@@ -75,10 +76,42 @@ class BasicLoaderTest extends \PHPUnit_Framework_TestCase
         ];
     }
 
+    public function providerLoadOldClass()
+    {
+        return [
+            ['Test1', 'Legacy1'],
+            ['Test2', 'Legacy2'],
+            ['Test3', 'Legacy3'],
+            ['Test3', 'Sub_SubLegacy3'],
+            ['Test3', 'Sub\\SubLegacy3'],
+        ];
+    }
+
+    public function providerLoadSubClass()
+    {
+        return [
+            ['Test2', 'Sub', 'SubOnlyIn2'],
+            ['Test3', 'Sub', 'SubOnlyIn3'],
+        ];
+    }
+
+    public function providerLoadSubOldClass()
+    {
+        return [
+            ['Test2', 'Sub', 'SubLegacy2'],
+            ['Test3', 'Sub', 'SubLegacy3'],
+        ];
+    }
+
     public function testClassLoader()
     {
         $loader = $this->getBasicProjectOverloader();
         $this->assertEquals(get_class($loader), 'Zalt\Loader\ProjectOverloader');
+    }
+
+    public function testGetInstance()
+    {
+        $this->assertEquals($this->getBasicProjectOverloader(), ProjectOverloader::getInstance());
     }
 
     /**
@@ -109,5 +142,58 @@ class BasicLoaderTest extends \PHPUnit_Framework_TestCase
         foreach ($instances as $instance) {
             $this->assertInstanceOf($instance, $class);
         }
+    }
+
+    /**
+     *
+     * @param string $namespace
+     * @param string $subClass
+     *
+     * @dataProvider providerLoadOldClass
+     */
+    public function testLoadOldClass($namespace, $subClass)
+    {
+        $loader = $this->getBasicProjectOverloader();
+        $loader->legacyClasses = true;
+
+        $class  = $loader->find($subClass);
+        $this->assertEquals($class, '\\' . strtr($namespace . '_' . $subClass, '\\', '_'));
+    }
+
+    /**
+     *
+     * @param string $namespace
+     * @param string $subFolder
+     * @param string $subClass
+     *
+     * @dataProvider providerLoadSubClass
+     */
+    public function testLoadSubClass($namespace, $subFolder, $subClass)
+    {
+        $loader = $this->getBasicProjectOverloader()->createSubFolderOverloader($subFolder);
+
+        $class  = $loader->find($subClass);
+        $this->assertEquals($class, $namespace . '\\' . $subFolder . '\\' . $subClass);
+    }
+
+    /**
+     *
+     * @param string $namespace
+     * @param string $subFolder
+     * @param string $subClass
+     *
+     * @dataProvider providerLoadSubOldClass
+     */
+    public function testLoadSubOldClass($namespace, $subFolder, $subClass)
+    {
+        $loader1 = $this->getBasicProjectOverloader();
+        $loader1->legacyClasses = true;
+        $loader2 = $loader1->createSubFolderOverloader($subFolder);
+
+        $this->assertEquals($loader1->legacyClasses, $loader2->legacyClasses);
+        $this->assertEquals($loader1->legacyPrefix, $loader2->legacyPrefix);
+
+        $class  = $loader2->find($subClass);
+        $this->assertEquals($class, '\\' . strtr($namespace . '_' . $subFolder . '_' . $subClass, '\\' , '_'));
     }
 }
