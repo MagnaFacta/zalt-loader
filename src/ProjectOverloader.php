@@ -328,11 +328,11 @@ class ProjectOverloader
     {
         $overloaders = [];
 
-        if ($this->legacyClasses) {
+        /*if ($this->legacyClasses) {
             foreach ($this->overloaders as $folder) {
                 $overloaders[] = $folder . '_' . $subFolder;
             }
-        }
+        }*/
 
         foreach ($this->overloaders as $folder) {
             $overloaders[] = $folder . '\\' . $subFolder;

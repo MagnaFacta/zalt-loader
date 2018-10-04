@@ -107,6 +107,16 @@ class BasicLoaderTest extends \PHPUnit_Framework_TestCase
         ];
     }
 
+    public function providerLoadSubMixedClass()
+    {
+        return [
+            ['Test2', 'Sub', 'SubOnlyIn2', true,],
+            ['Test3', 'Sub', 'SubOnlyIn3', true,],
+            ['Test2', 'Sub', 'SubLegacy2', false,],
+            ['Test3', 'Sub', 'SubLegacy3', false,],
+        ];
+    }
+
     public function testClassLoader()
     {
         $loader = $this->getBasicProjectOverloader();
@@ -200,5 +210,30 @@ class BasicLoaderTest extends \PHPUnit_Framework_TestCase
 
         $class = $loaderSub->find($subClass);
         $this->assertEquals($class, '\\' . strtr($namespace . '_' . $subFolder . '_' . $subClass, '\\' , '_'));
+    }
+
+    /**
+     *
+     * @param string $namespace
+     * @param string $subFolder
+     * @param string $subClass
+     *
+     * @dataProvider providerLoadSubMixedClass
+     */
+    public function testLoadSubMixedClass($namespace, $subFolder, $subClass, $new)
+    {
+        $loaderMain = $this->getBasicProjectOverloader();
+        $loaderMain->legacyClasses = true;
+        $loaderSub  = $loaderMain->createSubFolderOverloader($subFolder);
+
+        $this->assertEquals($loaderMain->legacyClasses, $loaderSub->legacyClasses);
+        $this->assertEquals($loaderMain->legacyPrefix,  $loaderSub->legacyPrefix);
+
+        $class = $loaderSub->find($subClass);
+        if ($new) {
+            $this->assertEquals($class, $namespace . '\\' . $subFolder . '\\' . $subClass);
+        } else {
+            $this->assertEquals($class, '\\' . strtr($namespace . '_' . $subFolder . '_' . $subClass, '\\', '_'));
+        }
     }
 }
