@@ -368,6 +368,7 @@ class ProjectOverloader
 
         $verbose = $this->verbose || $this->verboseLoad;
         // echo "[$verbose] [" . $this->verbose . "] [" . $this->verboseLoad . "]\n";
+        $className = $this->formatName($className);
 
         foreach ($this->overloaders as $prefix) {
             $class = $this->findForPrefix($className, $prefix, $verbose);
@@ -423,6 +424,17 @@ class ProjectOverloader
         if ($verbose) {
             echo "Load attempt $class failed\n";
         }
+    }
+
+    /**
+     * Normalize class name
+     *
+     * @param  string $name
+     * @return string
+     */
+    protected function formatName($name)
+    {
+        return ucfirst((string) $name);
     }
 
     /**
