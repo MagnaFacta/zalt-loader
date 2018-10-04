@@ -394,7 +394,7 @@ class ProjectOverloader
             echo "Load attempt $class\n";
         }
 
-        if (class_exists($class, true)) {
+        if (class_exists($class, false)) {
             if ($verbose) {
                 echo "Load attempt successful! $class\n";
             }
@@ -414,6 +414,12 @@ class ProjectOverloader
             }
         }
 
+        if (class_exists($class, true)) {
+            if ($verbose) {
+                echo "Load attempt successful! $class\n";
+            }
+            return $class;
+        }
         if ($verbose) {
             echo "Load attempt $class failed\n";
         }

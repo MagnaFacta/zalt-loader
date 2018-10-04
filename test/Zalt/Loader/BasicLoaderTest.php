@@ -86,6 +86,8 @@ class BasicLoaderTest extends \PHPUnit_Framework_TestCase
             // Namespaced should still work
             ['Test3\\', 'OnlyIn3'], // Non
             ['Test3\\', 'Sub\\SubOnlyIn3'], // Non
+            // Loading an old class twice should still work
+            ['\\Test1_', 'Legacy1'],
         ];
     }
 
