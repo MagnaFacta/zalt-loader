@@ -120,6 +120,9 @@ class ProjectOverloader
      */
     public function addOverloaders(array $overloaders = array())
     {
+        foreach($overloaders as &$overloader) {
+            $overloader = str_replace('_', '\\', $overloader);
+        }
         $this->setOverloaders($overloaders + $this->overloaders);
 
         return $this;
