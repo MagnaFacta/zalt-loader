@@ -14,8 +14,8 @@ namespace Zalt\Loader;
 use Zalt\Loader\Exception\LoadException;
 use Zalt\Loader\Target\TargetInterface;
 
-use Zend\ServiceManager\ServiceLocatorInterface;
-use Zend\ServiceManager\ServiceManager;
+use Laminas\ServiceManager\ServiceLocatorInterface;
+use Laminas\ServiceManager\ServiceManager;
 
 /**
  *
@@ -56,6 +56,7 @@ class ProjectOverloader
      */
     protected $overloaders = array(
         'Zalt' => 'Zalt',
+        'Laminas' => 'Laminas',
         'Zend' => 'Zend',
         );
 
@@ -198,7 +199,7 @@ class ProjectOverloader
      * Creates a new object of the given class.
      *
      * Simple use is with a string class name: $this->create('MyClass') will
-     * try to create 'Zalt\MyClass' or else 'Zend\MyClass' or whatever overloader
+     * try to create 'Zalt\MyClass' or else 'Laminas\MyClass' or whatever overloader
      * directories have been set.
      *
      * You can add parameters: $this->create('MyClass', 'x', 'y') will
@@ -277,7 +278,7 @@ class ProjectOverloader
      * <code>
      * $this->createServiceManager([
      *      'ob1' => 'Overloaded\\Class\\Created\\Without\\Arguments',
-     *      'ob2' => 'Zend\Full\\Class\\Created\\Without\\Arguments',
+     *      'ob2' => 'Laminas\Full\\Class\\Created\\Without\\Arguments',
      *      'ob3' => ['Overloaded\\Class\\Created\\With\\Arguments', ['Arg1', 'Arg2]],
      *      'ob4' => new InvokableFactoryEtcClass('x', 'y'),
      *      'ob5' => funtion () { return new stdClass() },
