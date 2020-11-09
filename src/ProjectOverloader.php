@@ -73,25 +73,30 @@ class ProjectOverloader
     protected $serviceManager;
 
     /**
+     * @var \MUtil_Source
+     */
+    protected $source;
+    
+    /**
      * Global overrule verbose switch
      *
      * @var boolean
      */
-    public $verbose = false;
+    public static $verbose = false;
 
     /**
      * Show all load attempts until successful
      *
      * @var boolean
      */
-    public $verboseLoad = false;
+    public static $verboseLoad = false;
 
     /**
      * Show all unsuccessful target set attempts
      *
      * @var boolean
      */
-    public $verboseTarget = false;
+    public static $verboseTarget = false;
 
     /**
      *
@@ -133,13 +138,13 @@ class ProjectOverloader
     {
         if (! $this->serviceManager instanceof ServiceLocatorInterface) {
             if ($this->requireServiceManager) {
-                throw new LoadException("Calling applyToTarget while ServiceManager is not set.");
+                throw new LoadException("Calling applyToLegacyTarget while ServiceManager is not set.");
             }
 
             return false;
         }
 
-        $verbose = $this->verbose || $this->verboseTarget;
+        $verbose = self::$verbose || self::$verboseTarget;
 
         foreach ($target->getRegistryRequests() as $name) {
             $className = ucfirst($name);
@@ -149,8 +154,12 @@ class ProjectOverloader
             if ($this->serviceManager->has($className)) {
                 $target->answerRegistryRequest($name, $this->serviceManager->get($className));
             } elseif ($verbose) {
-                echo "Could not find target name: $name\n";
+                echo sprintf("Could not find target name: %s for object of type %s.<br/>\n", $name, get_class($target));
             }
+        }
+
+        if ($this->source instanceof \MUtil_Registry_SourceInterface) {
+            return $this->source->applySource($target);
         }
 
         $output = $target->checkRegistryRequestsAnswers();
@@ -176,7 +185,7 @@ class ProjectOverloader
             return false;
         }
 
-        $verbose = $this->verbose || $this->verboseTarget;
+        $verbose = self::$verbose || self::$verboseTarget;
 
         foreach ($target->getRegistryRequests() as $name) {
             if ($this->serviceManager->has($name)) {
@@ -184,7 +193,7 @@ class ProjectOverloader
             } elseif ('loader' == $name) {
                 $target->answerRegistryRequest($name, $this);
             } elseif ($verbose) {
-                echo "Could not find target name: $name\n";
+                echo "Could not find target name: $name<br/>\n";
             }
         }
 
@@ -353,6 +362,11 @@ class ProjectOverloader
             $subOverloader->legacyClasses = $this->legacyClasses;
             $subOverloader->legacyPrefix = $this->legacyPrefix;
         }
+        
+        if ($this->source instanceof \MUtil_Registry_SourceInterface) {
+            return $subOverloader->setSource($this->source);
+        }
+        
         return $subOverloader;
     }
 
@@ -370,8 +384,8 @@ class ProjectOverloader
             return $className;
         }
 
-        $verbose = $this->verbose || $this->verboseLoad;
-        // echo "[$verbose] [" . $this->verbose . "] [" . $this->verboseLoad . "]\n";
+        $verbose = self::$verbose || self::$verboseLoad;
+        // echo "[$verbose] [" . self::$verbose . "] [" . self::$verboseLoad . "]<br/>\n";
         $className = $this->formatName($className);
 
         foreach ($this->overloaders as $prefix) {
@@ -396,12 +410,12 @@ class ProjectOverloader
     {
         $class = $prefix . '\\' . $className;
         if ($verbose) {
-            echo "Load attempt $class\n";
+            echo "Load attempt $class<br/>\n";
         }
 
         if (class_exists($class, false)) {
             if ($verbose) {
-                echo "Load attempt successful! $class\n";
+                echo "Load attempt successful! $class<br/>\n";
             }
             return $class;
         }
@@ -409,11 +423,11 @@ class ProjectOverloader
         if ($this->legacyClasses) {
             $legacyClass = '\\' . strtr($class, '\\', '_');
             if ($verbose) {
-                echo "Load attempt $legacyClass\n";
+                echo "Load attempt $legacyClass<br/>\n";
             }
             if (class_exists($legacyClass, true)) {
                 if ($verbose) {
-                    echo "Load successful! $legacyClass\n";
+                    echo "Load successful! $legacyClass<br/>\n";
                 }
                 return $legacyClass;
             }
@@ -421,12 +435,12 @@ class ProjectOverloader
 
         if (class_exists($class, true)) {
             if ($verbose) {
-                echo "Load attempt successful! $class\n";
+                echo "Load attempt successful! $class<br/>\n";
             }
             return $class;
         }
         if ($verbose) {
-            echo "Load attempt $class failed\n";
+            echo "Load attempt $class failed<br/>\n";
         }
     }
 
@@ -537,6 +551,16 @@ class ProjectOverloader
             $serviceManager->setService('loader', $this);
         }
 
+        return $this;
+    }
+
+    /**
+     * @param \MUtil_Registry_SourceInterface $source
+     */
+    public function setSource(\MUtil_Registry_SourceInterface $source)
+    {
+        $this->source = $source;
+        
         return $this;
     }
 }
