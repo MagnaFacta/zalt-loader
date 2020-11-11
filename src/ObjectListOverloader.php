@@ -38,7 +38,7 @@ class ObjectListOverloader
      *
      * @var array Of prefix => path strings for class lookup
      */
-    protected $_dirs;
+    protected $_dirs = [];
 
     /**
      * @var string Subdir for overloading
