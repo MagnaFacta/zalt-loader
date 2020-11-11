@@ -57,7 +57,7 @@ class ObjectListOverloader
         $this->_subLoader = $loader->createSubFolderOverloader($this->_subDir);
 
         foreach ($dirs as $name => $dir) {
-            $sub = $dir . '\\' . $this->_subDir;
+            $sub = $dir . DIRECTORY_SEPARATOR . $this->_subDir;
             if (file_exists($sub)) {
                 $this->_dirs[$name] = $sub;
             }
