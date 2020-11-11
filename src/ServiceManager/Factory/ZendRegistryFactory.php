@@ -22,7 +22,7 @@ use Laminas\ServiceManager\ServiceLocatorInterface;
  * @package    ServiceManager
  * @subpackage Factory
  * @license    No free license, do not copy
- * @since      Class available since version 1.8.8
+ * @since      Class available since version 1.9.1
  */
 class ZendRegistryFactory implements \Laminas\ServiceManager\Factory\AbstractFactoryInterface
 {
