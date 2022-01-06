@@ -11,11 +11,9 @@
 
 namespace Zalt\Loader;
 
+use Psr\Container\ContainerInterface;
 use Zalt\Loader\Exception\LoadException;
 use Zalt\Loader\Target\TargetInterface;
-
-use Laminas\ServiceManager\ServiceLocatorInterface;
-use Laminas\ServiceManager\ServiceManager;
 
 /**
  *
@@ -28,6 +26,11 @@ use Laminas\ServiceManager\ServiceManager;
  */
 class ProjectOverloader
 {
+    /**
+     * @var ContainerInterface
+     */
+    protected $container;
+
     /**
      *
      * @var ProjectOverloader
@@ -54,11 +57,11 @@ class ProjectOverloader
      *
      * @var array
      */
-    protected $overloaders = array(
+    protected $overloaders = [
         'Zalt' => 'Zalt',
         'Laminas' => 'Laminas',
         'Zend' => 'Zend',
-        );
+    ];
 
     /**
      *
@@ -67,16 +70,10 @@ class ProjectOverloader
     protected $requireServiceManager = true;
 
     /**
-     *
-     * @var ServiceLocatorInterface
-     */
-    protected $serviceManager;
-
-    /**
      * @var \MUtil_Source
      */
     protected $source;
-    
+
     /**
      * Global overrule verbose switch
      *
@@ -103,8 +100,10 @@ class ProjectOverloader
      * @param array $overloaders New overloaders
      * @param boolean $add       Add to default overloaders
      */
-    public function __construct(array $overloaders = array(), $add = true)
+    public function __construct(ContainerInterface $container, array $overloaders = array(), $add = true)
     {
+        $this->container = $container;
+
         if (! self::$instanceOfSelf instanceof self) {
             // Only set for initial overloader
             self::$instanceOfSelf = $this;
@@ -117,6 +116,7 @@ class ProjectOverloader
                 $this->setOverloaders($overloaders);
             }
         }
+
     }
 
     /**
@@ -124,7 +124,7 @@ class ProjectOverloader
      * @param array $overloaders New overloaders, first overloader is tried first
      * @return \Zalt\Loader\ProjectOverloader
      */
-    public function addOverloaders(array $overloaders = array())
+    public function addOverloaders(array $overloaders = [])
     {
         foreach($overloaders as &$overloader) {
             $overloader = str_replace('_', '\\', $overloader);
@@ -136,14 +136,6 @@ class ProjectOverloader
 
     public function applyToLegacyTarget(\MUtil_Registry_TargetInterface $target)
     {
-        if (! $this->serviceManager instanceof ServiceLocatorInterface) {
-            if ($this->requireServiceManager) {
-                throw new LoadException("Calling applyToLegacyTarget while ServiceManager is not set.");
-            }
-
-            return false;
-        }
-
         $verbose = self::$verbose || self::$verboseTarget;
 
         foreach ($target->getRegistryRequests() as $name) {
@@ -151,8 +143,8 @@ class ProjectOverloader
             if ($this->legacyPrefix) {
                 $className = $this->legacyPrefix . $className;
             }
-            if ($this->serviceManager->has($className)) {
-                $target->answerRegistryRequest($name, $this->serviceManager->get($className));
+            if ($this->container->has($className)) {
+                $target->answerRegistryRequest($name, $this->container->get($className));
             } elseif ($verbose) {
                 echo sprintf("Could not find target name: %s for object of type %s.<br/>\n", $name, get_class($target));
             }
@@ -177,19 +169,11 @@ class ProjectOverloader
      */
     public function applyToTarget(TargetInterface $target)
     {
-        if (! $this->serviceManager instanceof ServiceLocatorInterface) {
-            if ($this->requireServiceManager) {
-                throw new LoadException("Calling applyToTarget while ServiceManager is not set.");
-            }
-
-            return false;
-        }
-
         $verbose = self::$verbose || self::$verboseTarget;
 
         foreach ($target->getRegistryRequests() as $name) {
-            if ($this->serviceManager->has($name)) {
-                $target->answerRegistryRequest($name, $this->serviceManager->get($name));
+            if ($this->container->has($name)) {
+                $target->answerRegistryRequest($name, $this->container->get($name));
             } elseif ('loader' == $name) {
                 $target->answerRegistryRequest($name, $this);
             } elseif ($verbose) {
@@ -280,58 +264,6 @@ class ProjectOverloader
     }
 
     /**
-     * Create a service manager using a simpler syntax to create factory objects created
-     * though this loader.
-     *
-     * See the example for the possibilities:
-     * <code>
-     * $this->createServiceManager([
-     *      'ob1' => 'Overloaded\\Class\\Created\\Without\\Arguments',
-     *      'ob2' => 'Laminas\Full\\Class\\Created\\Without\\Arguments',
-     *      'ob3' => ['Overloaded\\Class\\Created\\With\\Arguments', ['Arg1', 'Arg2]],
-     *      'ob4' => new InvokableFactoryEtcClass('x', 'y'),
-     *      'ob5' => funtion () { return new stdClass() },
-     * ]);
-     * </code>
-     *
-     * This loader is automatically set as the loader
-     *
-     * This function also sets the service manager for this object if it was not yet set.
-     *
-     * @param array  $loaderFactories      string => string=classname|array[classname, params]|factory object
-     * @param array  $serviceManagerConfig An optional full configuration array for the service manager,
-     *                                     the previous $loaderFactories are added to this array.
-     * @param string $loaderName           Name used to set this object to if not already set in the array. Disable
-     *                                     this function by setting it to null or false.
-     * @return ServiceManager
-     */
-    public function createServiceManager(array $loaderFactories = [], array $serviceManagerConfig = [], $loaderName = 'loader')
-    {
-        if ($loaderName && (! isset($serviceManagerConfig['services'][$loaderName]))) {
-            $serviceManagerConfig['services'][$loaderName] = $this;
-        }
-        foreach ($loaderFactories as $name => $creator) {
-            if (is_string($creator)) {
-                $factor = $this->serviceManagerFactory($creator);
-            } elseif (is_array($creator)) {
-                $class  = array_shift($creator);
-                $args   = array_shift($creator);
-                $factor = $this->serviceManagerFactory($class, ...$args);
-            } else {
-                $factor = $creator;
-            }
-            $serviceManagerConfig['factories'][$name] = $factor;
-        }
-        $serviceManager = $this->create('ServiceManager\\ServiceManager', $serviceManagerConfig);
-
-        if (! $this->serviceManager) {
-            $this->serviceManager = $serviceManager;
-        }
-
-        return $serviceManager;
-    }
-
-    /**
      * Creates a copy of this overloader, but working on a sub folder
      *
      * @param string $subFolder
@@ -351,22 +283,16 @@ class ProjectOverloader
             $overloaders[] = $folder . '\\' . $subFolder;
         }
 
-        $subOverloader = new self($overloaders, false);
+        $subOverloader = new self($this->container, $overloaders, false);
         if ($this->legacyClasses) {
             $subOverloader->legacyClasses = true;
             $subOverloader->legacyPrefix  = $this->legacyPrefix;
         }
 
-        if ($this->serviceManager instanceof ServiceLocatorInterface) {
-            $subOverloader->setServiceManager($this->serviceManager);
-            $subOverloader->legacyClasses = $this->legacyClasses;
-            $subOverloader->legacyPrefix = $this->legacyPrefix;
-        }
-        
         if ($this->source instanceof \MUtil_Registry_SourceInterface) {
             return $subOverloader->setSource($this->source);
         }
-        
+
         return $subOverloader;
     }
 
@@ -455,16 +381,17 @@ class ProjectOverloader
         return ucfirst((string) $name);
     }
 
+    public function getContainer()
+    {
+        return $this->container;
+    }
+
     /**
      *
      * @return \Zalt\Loader\ProjectOverloader
      */
     public static function getInstance()
     {
-        if (! self::$instanceOfSelf instanceof ProjectOverloader) {
-            new ProjectOverloader();
-        }
-
         return self::$instanceOfSelf;
     }
 
@@ -475,55 +402,6 @@ class ProjectOverloader
     public function getOverloaders()
     {
         return $this->overloaders;
-    }
-
-    /**
-     * Get service manager
-     *
-     * @return ServiceLocatorInterface
-     */
-    public function getServiceManager()
-    {
-        return $this->serviceManager;
-    }
-
-    /**
-     * Ignore missing service managers (e.g. for testing).
-     *
-     * @return \Zalt\Loader\ProjectOverloader
-     */
-    public function ignoreMissingServiceManager()
-    {
-        $this->requireServiceManager = false;
-
-        return $this;
-    }
-
-    /**
-     * Is a missing service managers ignored (e.g. for testing).
-     *
-     * @return \Zalt\Loader\ProjectOverloader
-     */
-    public function isServiceManagerRequired()
-    {
-        return $this->requireServiceManager;
-    }
-
-    /**
-     * Creates an object loader for the service manager
-     *
-     * @param  string    $className The name of the class, minus the prefix
-     * @param  array     $arguments Class loadiung arguments
-     * @return object    The created object
-     * @throws LoadException
-     */
-    public function serviceManagerFactory($className, ...$arguments)
-    {
-        $this->find($className);
-        $loader = $this;
-        return function () use ($loader, $className, $arguments) {
-            return $loader->create($className, ...$arguments);
-        };
     }
 
     /**
@@ -539,28 +417,12 @@ class ProjectOverloader
     }
 
     /**
-     * Set service locator
-     *
-     * @param ServiceLocatorInterface $serviceManager
-     */
-    public function setServiceManager(ServiceLocatorInterface $serviceManager)
-    {
-        $this->serviceManager = $serviceManager;
-
-        if (($serviceManager instanceof ServiceManager) && (! $serviceManager->has('loader'))) {
-            $serviceManager->setService('loader', $this);
-        }
-
-        return $this;
-    }
-
-    /**
      * @param \MUtil_Registry_SourceInterface $source
      */
     public function setSource(\MUtil_Registry_SourceInterface $source)
     {
         $this->source = $source;
-        
+
         return $this;
     }
 }
