@@ -378,7 +378,7 @@ class ProjectOverloader
      */
     protected function formatName($name)
     {
-        return ucfirst((string) $name);
+        return ucfirst(strtr((string) $name, '_', '\\'));
     }
 
     public function getContainer()
