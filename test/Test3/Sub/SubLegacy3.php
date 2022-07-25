@@ -1,6 +1,6 @@
 <?php
 
-class Test3_Sub_SubLegacy3
+class SubLegacy3
 {
 
 }

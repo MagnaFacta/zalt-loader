@@ -35,7 +35,7 @@ trait TranslateableTrait
 
     /**
      *
-     * @var Laminas\I18n\Translator\TranslatorInterface
+     * @var \Laminas\I18n\Translator\TranslatorInterface
      */
     protected $translator;
     
@@ -68,7 +68,7 @@ trait TranslateableTrait
      */
     protected function initTranslateable()
     {
-        if ($this->translator instanceof Laminas\I18n\Translator\TranslatorInterface) {
+        if ($this->translator instanceof \Laminas\I18n\Translator\TranslatorInterface) {
             // OK
             return;
         } else {
@@ -94,7 +94,7 @@ trait TranslateableTrait
         }
 
         // Make sure there always is an adapter, even if it is fake.
-        $this->translateAdapter = new \MUtil_Translate_Adapter_Potemkin();
+        $this->translateAdapter = new \MUtil\Translate\Adapter\Potemkin();
     }
 
     /**

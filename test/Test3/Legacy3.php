@@ -1,6 +1,6 @@
 <?php
 
-class Test3_Legacy3
+class Legacy3
 {
 
 }
