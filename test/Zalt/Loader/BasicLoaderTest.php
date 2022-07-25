@@ -82,7 +82,7 @@ class BasicLoaderTest extends \PHPUnit_Framework_TestCase
             ['\\Test1_', 'Legacy1'],
             ['\\Test2_', 'Legacy2'],
             ['\\Test3_', 'Legacy3'],
-            ['\\Test3_', 'Sub_SubLegacy3'],
+            ['\\Test3_', 'Sub\\SubLegacy3'],
             // Namespaced should still work
             ['Test3\\', 'OnlyIn3'], // Non
             ['Test3\\', 'Sub\\SubOnlyIn3'], // Non

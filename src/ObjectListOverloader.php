@@ -29,12 +29,12 @@ class ObjectListOverloader
      *
      * The standard value is
      * - <Project_name> => application/classes
-     * - Gems => library/Gems/classes
+     * - \Gems => library/Gems/classes
      *
      * But an alternative could be:
      * - Demopulse => application/classes
      * - Pulse => application/classes
-     * - Gems => library/Gems/classes
+     * - \Gems => library/Gems/classes
      *
      * @var array Of prefix => path strings for class lookup
      */
@@ -114,7 +114,7 @@ class ObjectListOverloader
                 $filename    = $fileinfo->getFilename();
                 $className   = $prefix . substr($filename, 0, -4);
                 $classNsName = '\\' . strtr($className, '_', '\\');
-                // \MUtil_Echo::track($filename);
+                // \MUtil\EchoOut\EchoOut::track($filename);
                 // Take care of double definitions
                 if (isset($results[$className])) {
                     continue;
@@ -132,13 +132,13 @@ class ObjectListOverloader
                 if ($class instanceof $classType) {
                     if ($class instanceof TargetInterface) {
                         $this->_subLoader->applyToTarget($class);
-                    } elseif ($class instanceof \MUtil_Registry_TargetInterface) {
+                    } elseif ($class instanceof \MUtil\Registry\TargetInterface) {
                         $this->_subLoader->applyToLegacyTarget($class);
                     } 
 
                     $results[$className] = trim($class->$nameMethod()) . ' (' . $className . ')';
                 }
-                // \MUtil_Echo::track($eventName);
+                // \MUtil\EchoOut\EchoOut::track($eventName);
             }
 
         }
@@ -171,7 +171,7 @@ class ObjectListOverloader
      */
     public function loadObject($subName, $subType, $subClass)
     {
-        // \MUtil_Echo::track($subName);
+        // \MUtil\EchoOut\EchoOut::track($subName);
         if (! class_exists($subName, true)) {
             throw new LoadException("The part '$subName' of type '$subType' cannot be loaded.");
         }
@@ -184,7 +184,7 @@ class ObjectListOverloader
 
         if ($object instanceof TargetInterface) {
             $this->_subLoader->applyToTarget($object);
-        } elseif ($object instanceof \MUtil_Registry_TargetInterface) {
+        } elseif ($object instanceof \MUtil\Registry\TargetInterface) {
             $this->_subLoader->applyToLegacyTarget($object);
         }
 
