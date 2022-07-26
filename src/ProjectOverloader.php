@@ -134,7 +134,7 @@ class ProjectOverloader
         return $this;
     }
 
-    public function applyToLegacyTarget(\MUtil_Registry_TargetInterface $target)
+    public function applyToLegacyTarget(\MUtil\Registry\TargetInterface $target)
     {
         $verbose = self::$verbose || self::$verboseTarget;
 
@@ -150,7 +150,7 @@ class ProjectOverloader
             }
         }
 
-        if ($this->source instanceof \MUtil_Registry_SourceInterface) {
+        if ($this->source instanceof \MUtil\Registry\SourceInterface) {
             return $this->source->applySource($target);
         }
 
@@ -196,7 +196,7 @@ class ProjectOverloader
      * directories have been set.
      *
      * You can add parameters: $this->create('MyClass', 'x', 'y') will
-     * create e.g.: new Zalt\MyClass('x', 'y')
+     * create e.g.: new \Zalt\MyClass('x', 'y')
      *
      * In general this function tries to make sense of what is passed: an array
      * that is not callable is assumed to consist of the className followed by
@@ -204,7 +204,7 @@ class ProjectOverloader
      * object is passed or the result of the previous processing it is just
      * checked for having to call applyToTarget().
      *
-     * The result is that all these functions result in: new Zalt\MyClass('x', 'y')
+     * The result is that all these functions result in: new \Zalt\MyClass('x', 'y')
      * <code>
      *  $this->create('MyClass', 'x', 'y');
      *  $this->create(['MyClass', 'x', 'y']);
@@ -213,7 +213,7 @@ class ProjectOverloader
      *  $this->create(new \Zalt\MyClass('x', 'y'));
      *
      *  // Output in all cases:
-     *  // new Zalt\MyClass('x', 'y')
+     *  // new \Zalt\MyClass('x', 'y')
      *
      *  // But this generates an error:
      *  $this->create(['MyClass',  'x'], 'y');
@@ -256,7 +256,7 @@ class ProjectOverloader
             $this->applyToTarget($object);
         }
 
-        if ($this->legacyClasses && $object instanceof \MUtil_Registry_TargetInterface) {
+        if ($this->legacyClasses && $object instanceof \MUtil\Registry\TargetInterface) {
             $this->applyToLegacyTarget($object);
         }
 
@@ -289,7 +289,7 @@ class ProjectOverloader
             $subOverloader->legacyPrefix  = $this->legacyPrefix;
         }
 
-        if ($this->source instanceof \MUtil_Registry_SourceInterface) {
+        if ($this->source instanceof \MUtil\Registry\SourceInterface) {
             return $subOverloader->setSource($this->source);
         }
 
@@ -417,9 +417,9 @@ class ProjectOverloader
     }
 
     /**
-     * @param \MUtil_Registry_SourceInterface $source
+     * @param \MUtil\Registry\SourceInterface $source
      */
-    public function setSource(\MUtil_Registry_SourceInterface $source)
+    public function setSource(\MUtil\Registry\SourceInterface $source)
     {
         $this->source = $source;
 

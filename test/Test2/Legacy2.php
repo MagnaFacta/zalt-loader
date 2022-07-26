@@ -1,6 +1,8 @@
 <?php
 
-class Test2_Legacy2 extends \Test1_Legacy1
+namespace Test2;
+
+class Legacy2 extends \Test1\Legacy1
 {
 
 }

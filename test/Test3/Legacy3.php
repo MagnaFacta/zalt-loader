@@ -1,6 +1,8 @@
 <?php
 
-class Test3_Legacy3
+namespace Test3;
+
+class Legacy3
 {
 
 }
