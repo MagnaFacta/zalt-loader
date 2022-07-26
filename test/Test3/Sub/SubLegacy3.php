@@ -1,6 +1,8 @@
 <?php
 
-class Test3_Sub_SubLegacy3
+namespace Test3\Sub;
+
+class SubLegacy3
 {
 
 }
