@@ -11,7 +11,7 @@
 
 namespace Zalt\Loader;
 
-use Zalt\Loader\ProjectOverloader;
+use Zalt\Mock\SimpleServiceManager;
 
 /**
  *
@@ -21,13 +21,15 @@ use Zalt\Loader\ProjectOverloader;
  * @license    New BSD License
  * @since      Class available since version 1.8.3 Aug 30, 2018 12:43:24 PM
  */
-class TargetLoaderTest extends \PHPUnit_Framework_TestCase
+class TargetLoaderTest extends \PHPUnit\Framework\TestCase
 {
     /**
      *
      * @var ProjectOverloader
      */
     protected $overLoader;
+
+    protected SimpleServiceManager $sm;
 
     /**
      *
@@ -41,18 +43,23 @@ class TargetLoaderTest extends \PHPUnit_Framework_TestCase
     /**
      * This method is called before a test is executed.
      */
-    protected function setUp()
+    protected function setUp(): void
     {
-        $this->overLoader = new ProjectOverloader([
+        $this->sm = new SimpleServiceManager([
+            'var321' => new \Test3\In3and2and1(),
+            'var31' => new \Test3\In3and1(null),
+            ]);
+
+        $this->overLoader = new ProjectOverloader($this->sm, [
             'Test3',
             'Test2',
             'Test1',
             ]);
 
-        $this->overLoader->createServiceManager([
-            'var321' => 'Test3\In3and2and1',
-            'var31' => ['Test3\In3and1', [null]],
-            ]);
+//        $this->overLoader->createServiceManager([
+//            'var321' => 'Test3\In3and2and1',
+//            'var31' => ['Test3\In3and1', [null]],
+//            ]);
     }
 
     public function testClassLoader()

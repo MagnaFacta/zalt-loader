@@ -5,29 +5,27 @@
  * @package    Zalt-loader
  * @subpackage BasicLoaderTest
  * @author     Matijs de Jong <mjong@magnafacta.nl>
- * @copyright  Expression copyright is undefined on line 44, column 18 in Templates/Scripting/PHPClass.php.
- * @license    No free license, do not copy
  */
 
 namespace Zalt\Loader;
 
-use Zalt\Loader\ProjectOverloader;
+use Zalt\Mock\SimpleServiceManager;
 
 /**
  *
  * @package    Zalt-loader
  * @subpackage BasicLoaderTest
- * @copyright  Expression copyright is undefined on line 56, column 18 in Templates/Scripting/PHPClass.php.
- * @license    No free license, do not copy
  * @since      Class available since version 1.8.3 Aug 16, 2018 12:55:49 PM
  */
-class BasicLoaderTest extends \PHPUnit_Framework_TestCase
+class BasicLoaderTest extends \PHPUnit\Framework\TestCase
 {
     /**
      *
      * @var ProjectOverloader
      */
     protected $overLoader;
+
+    protected SimpleServiceManager $sm;
 
     /**
      *
@@ -41,9 +39,11 @@ class BasicLoaderTest extends \PHPUnit_Framework_TestCase
     /**
      * This method is called before a test is executed.
      */
-    protected function setUp()
+    protected function setUp(): void
     {
-        $this->overLoader = new ProjectOverloader([
+        $this->sm = new SimpleServiceManager([]);
+        
+        $this->overLoader = new ProjectOverloader($this->sm, [
             'Test3',
             'Test2',
             'Test1',
@@ -82,7 +82,7 @@ class BasicLoaderTest extends \PHPUnit_Framework_TestCase
             ['\\Test1_', 'Legacy1'],
             ['\\Test2_', 'Legacy2'],
             ['\\Test3_', 'Legacy3'],
-            ['\\Test3_', 'Sub\\SubLegacy3'],
+            ['\\Test3_', 'Sub_SubLegacy3'],
             // Namespaced should still work
             ['Test3\\', 'OnlyIn3'], // Non
             ['Test3\\', 'Sub\\SubOnlyIn3'], // Non
@@ -172,7 +172,7 @@ class BasicLoaderTest extends \PHPUnit_Framework_TestCase
 
         // $loader->verbose = true;
         $class  = $loader->find($subClass);
-        $this->assertEquals($class, $namespace . $subClass);
+        $this->assertEquals($namespace . $subClass, $class, );
     }
 
     /**

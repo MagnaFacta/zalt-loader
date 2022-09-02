@@ -9,8 +9,6 @@
  * @license    No free license, do not copy
  */
 
-namespace Test1;
-
 /**
  *
  * @package    Test1
@@ -19,7 +17,7 @@ namespace Test1;
  * @license    No free license, do not copy
  * @since      Class available since version 1.8.3 Aug 30, 2018 2:26:39 PM
  */
-class Legacy1
+class Test1_Legacy1
 {
 
 }

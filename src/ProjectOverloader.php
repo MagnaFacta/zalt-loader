@@ -26,6 +26,8 @@ use Zalt\Loader\Target\TargetInterface;
  */
 class ProjectOverloader
 {
+    use ReflectionParameterTrait;
+    
     /**
      * @var ContainerInterface
      */
@@ -248,8 +250,9 @@ class ProjectOverloader
                 throw new LoadException("Create() could not load class .\\$className for any of the parent namespaces: "
                     . implode(', ', $this->overloaders));
             }
+            $params = $arguments + $this->resolveConstructorArguments($this->container, $class, count($arguments));
 
-            $object = new $class(...$arguments);
+            $object = new $class(...$params);
         }
 
         if ($object instanceof TargetInterface) {
