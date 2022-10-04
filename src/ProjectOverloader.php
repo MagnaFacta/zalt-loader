@@ -12,6 +12,8 @@
 namespace Zalt\Loader;
 
 use Psr\Container\ContainerInterface;
+use Zalt\Loader\DependencyResolver\ResolverInterface;
+use Zalt\Loader\DependencyResolver\SimpleResolver;
 use Zalt\Loader\Exception\LoadException;
 use Zalt\Loader\Target\TargetInterface;
 
@@ -26,12 +28,15 @@ use Zalt\Loader\Target\TargetInterface;
  */
 class ProjectOverloader
 {
-    use ReflectionParameterTrait;
-    
     /**
      * @var ContainerInterface
      */
     protected $container;
+
+    /**
+     * @var ResolverInterface
+     */
+    protected $dependencyResolver;
 
     /**
      *
@@ -72,7 +77,7 @@ class ProjectOverloader
     protected $requireServiceManager = true;
 
     /**
-     * @var \MUtil_Source
+     * @var \MUtil\Source
      */
     protected $source;
 
@@ -250,7 +255,9 @@ class ProjectOverloader
                 throw new LoadException("Create() could not load class .\\$className for any of the parent namespaces: "
                     . implode(', ', $this->overloaders));
             }
-            $params = $arguments + $this->resolveConstructorArguments($this->container, $class, count($arguments));
+
+            $resolver = $this->getDependencyResolver();
+            $params = $resolver->resolve($this->container, $class, $arguments);
 
             $object = new $class(...$params);
         }
@@ -389,6 +396,14 @@ class ProjectOverloader
         return $this->container;
     }
 
+    public function getDependencyResolver(): ResolverInterface
+    {
+        if ($this->dependencyResolver) {
+            return $this->getDependencyResolver();
+        }
+        return new SimpleResolver();
+    }
+
     /**
      *
      * @return \Zalt\Loader\ProjectOverloader
@@ -405,6 +420,14 @@ class ProjectOverloader
     public function getOverloaders()
     {
         return $this->overloaders;
+    }
+
+    /**
+     * @param ResolverInterface $dependencyResolver
+     */
+    public function setDependencyResolver(ResolverInterface $dependencyResolver): void
+    {
+        $this->dependencyResolver = $dependencyResolver;
     }
 
     /**
