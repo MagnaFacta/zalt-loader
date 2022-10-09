@@ -58,7 +58,7 @@ class ConstructorDependencyResolver implements ResolverInterface
                 }
             }
         }
-        $dependencyName = $dependency->getName()
+        $dependencyName = $dependency->getName();
         if (null !== $dependencyName) {
             foreach ($parameters as $parameter) {
                 if ($parameter instanceof $dependencyName) {
