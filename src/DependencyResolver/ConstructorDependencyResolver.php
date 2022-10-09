@@ -9,9 +9,9 @@ use Psr\Container\ContainerInterface;
 use Zalt\Loader\Exception\ServiceNotCreatedException;
 use Zalt\Loader\Exception\ServiceNotFoundException;
 
-class ConstructDependencyResolver implements ResolverInterface
+class ConstructorDependencyResolver implements ResolverInterface
 {
-    public function resolve(ContainerInterface $container, string $requestedName, array $parameters = [])
+    public function resolve(ContainerInterface $container, string $requestedName, array $parameters = []): array
     {
         $reflector = new ReflectionClass($requestedName);
 
@@ -21,12 +21,11 @@ class ConstructDependencyResolver implements ResolverInterface
 
         $constructor = $reflector->getConstructor();
         if ($constructor === null) {
-            return new $requestedName;
+            return [];
         }
 
         $askedDependencies = $constructor->getParameters();
         $results = $this->resolveDependencies($container, $askedDependencies);
-
         return $results;
     }
 

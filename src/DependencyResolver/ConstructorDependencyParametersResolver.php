@@ -5,7 +5,7 @@ namespace Zalt\Loader\DependencyResolver;
 use ReflectionParameter;
 use ReflectionNamedType;
 
-class ConstructDependencyParametersResolver extends ConstructDependencyResolver
+class ConstructorDependencyParametersResolver extends ConstructorDependencyResolver
 {
     public function __construct(protected ?string $leftOverParameterName = null)
     {}
