@@ -243,7 +243,7 @@ class ProjectOverloader
             $className = $classTmp;
         }
 
-        if (is_callable($className) && (! method_exists($className, '__invoke'))) {
+        if (is_callable($className) && (! moethod_exists($className, '__invoke'))) {
             $className = call_user_func_array($className, $arguments);
         }
 
@@ -257,7 +257,7 @@ class ProjectOverloader
             }
 
             $resolver = $this->getDependencyResolver();
-            $params   = $resolver->resolve($this->container, $class, $arguments);
+            $params   = $resolver->resolve($class, $this->container, $arguments);
 
             $object = new $class(...$params);
         }

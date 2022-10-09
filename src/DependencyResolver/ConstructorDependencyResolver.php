@@ -11,7 +11,7 @@ use Zalt\Loader\Exception\ServiceNotFoundException;
 
 class ConstructorDependencyResolver implements ResolverInterface
 {
-    public function resolve(ContainerInterface $container, string $requestedName, array $parameters = []): array
+    public function resolve(string $requestedName, ContainerInterface $container, array $parameters = []): array
     {
         $reflector = new ReflectionClass($requestedName);
 
@@ -32,7 +32,7 @@ class ConstructorDependencyResolver implements ResolverInterface
     protected function resolveDependencies($container, array $askedDependencies, array $parameters): array
     {
         return array_map(function(ReflectionParameter $dependency) use ($container, $parameters) {
-            if ($result = $this->resolveArrayDependency($dependency, $container)) {
+            if ($result = $this->resolveArrayDependency($dependency, $parameters)) {
                 return $result;
             }
             if ($result = $this->resolveContainerDependency($dependency, $container)) {
