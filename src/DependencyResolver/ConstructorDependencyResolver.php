@@ -25,18 +25,49 @@ class ConstructorDependencyResolver implements ResolverInterface
         }
 
         $askedDependencies = $constructor->getParameters();
-        $results = $this->resolveDependencies($container, $askedDependencies);
+        $results = $this->resolveDependencies($container, $askedDependencies, $parameters);
         return $results;
     }
 
-    protected function resolveDependencies($container, array $askedDependencies): array
+    protected function resolveDependencies($container, array $askedDependencies, array $parameters): array
     {
-        return array_map(function(ReflectionParameter $dependency) use ($container) {
+        return array_map(function(ReflectionParameter $dependency) use ($container, $parameters) {
+            if ($result = $this->resolveArrayDependency($dependency, $container)) {
+                return $result;
+            }
             if ($result = $this->resolveContainerDependency($dependency, $container)) {
                 return $result;
             }
             return $this->resolveDefaultDependency($dependency);
         }, $askedDependencies);
+    }
+
+    protected function resolveArrayDependency(ReflectionParameter $dependency, array $parameters): mixed
+    {
+        $dependencyType = $dependency->getType();
+
+        $dependencyTypeName = null;
+        if ($dependencyType instanceof ReflectionNamedType) {
+            $dependencyTypeName = $dependencyType->getName();
+        }
+
+        if (null !== $dependencyTypeName) {
+            foreach ($parameters as $parameter) {
+                if ($parameter instanceof $dependencyTypeName) {
+                    return $parameter;
+                }
+            }
+        }
+        $dependencyName = $dependency->getName()
+        if (null !== $dependencyName) {
+            foreach ($parameters as $parameter) {
+                if ($parameter instanceof $dependencyName) {
+                    return $parameter;
+                }
+            }
+        }
+
+        return null;
     }
 
     protected function resolveContainerDependency(ReflectionParameter $dependency, ContainerInterface $container): mixed
