@@ -32,7 +32,7 @@ class ConstructorDependencyParametersResolver extends ConstructorDependencyResol
         if ($dependencyType instanceof ReflectionNamedType) {
             $dependencyClassName = $dependencyType->getName();
             foreach ($parameters as $parameter) {
-                if ($parameter instanceof $dependencyTypeName) {
+                if ($parameter instanceof $dependencyClassName) {
                     return $parameter;
                 }                
             }
