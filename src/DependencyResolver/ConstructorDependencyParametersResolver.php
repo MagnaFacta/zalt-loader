@@ -26,25 +26,27 @@ class ConstructorDependencyParametersResolver extends ConstructorDependencyResol
         }, $askedDependencies);
     }
 
-    protected function resolveParameterDependency(ReflectionParameter $dependency, array &$parameters)
+    protected function resolveParameterDependency(ReflectionParameter $dependency, array $parameters)
     {
         $dependencyType = $dependency->getType();
         if ($dependencyType instanceof ReflectionNamedType) {
             $dependencyClassName = $dependencyType->getName();
-            if (array_key_exists($dependencyClassName, $parameters)) {
-                $dependency = $parameters[$dependencyClassName];
-                unset($parameters[$dependencyClassName]);
-                return $dependency;
+            foreach ($parameters as $parameter) {
+                if ($parameter instanceof $dependencyTypeName) {
+                    return $parameter;
+                }                
             }
         }
 
         $dependencyName = $dependency->getName();
-        if (array_key_exists($dependencyName, $parameters)) {
-            $dependency = $parameters[$dependencyName];
-            unset($parameters[$dependencyName]);
-            return $dependency;
+        if (null !== $dependencyName) {
+            foreach ($parameters as $parameter) {
+                if ($parameter instanceof $dependencyName) {
+                    return $parameter;
+                }
+            }
         }
-
+        
         return null;
     }
 }
