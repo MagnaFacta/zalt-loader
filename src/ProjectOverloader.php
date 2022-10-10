@@ -14,6 +14,7 @@ namespace Zalt\Loader;
 use Psr\Container\ContainerInterface;
 use Zalt\Loader\DependencyResolver\ConstructorDependencyResolver;
 use Zalt\Loader\DependencyResolver\ResolverInterface;
+use Zalt\Loader\DependencyResolver\SimpleResolver;
 use Zalt\Loader\Exception\LoadException;
 use Zalt\Loader\Target\TargetInterface;
 
@@ -399,8 +400,9 @@ class ProjectOverloader
     public function getDependencyResolver(): ResolverInterface
     {
         if (! $this->dependencyResolver) {
-            $this->dependencyResolver = new ConstructorDependencyResolver();
+            $this->dependencyResolver = new SimpleResolver();
         }
+
         return $this->dependencyResolver;
     }
 
