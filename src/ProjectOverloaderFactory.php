@@ -23,7 +23,7 @@ class ProjectOverloaderFactory
 {
     static public array $defaultOverLoaderPaths = ['Zalt', 'Laminas', 'Mezzio',  'Symfony', 'Zend'];
     
-    public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null)
+    public function __invoke(ContainerInterface $container)
     {
         /**
          * @var mixed[]
@@ -34,7 +34,9 @@ class ProjectOverloaderFactory
         } else {
             $overloaderPaths = self::$defaultOverLoaderPaths;
         }
-        $overloader = new ProjectOverloader($container, $overloaderPaths);
+        $addTo = isset($config['overLoader']['AddTo']) ? (bool) $config['overLoader']['AddTo'] : true;
+        
+        $overloader = new ProjectOverloader($container, $overloaderPaths, $addTo);
         
         if (isset($config['overLoader']['LegacyPrefix'])) {
             $overloader->legacyClasses = true;

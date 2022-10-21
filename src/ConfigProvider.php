@@ -24,6 +24,7 @@ class ConfigProvider
         return [
             'dependencies' => $this->getDependencies(),
             'overLoader' => [
+                'AddTo' => false,
                 'Paths' => ProjectOverloaderFactory::$defaultOverLoaderPaths,
                 // 'LegacyPrefix' => 'Legacy',
                 ],
