@@ -2,6 +2,7 @@
 
 namespace Zalt\Loader\DependencyResolver;
 
+use Psr\Container\ContainerInterface;
 use ReflectionParameter;
 use ReflectionNamedType;
 
@@ -34,7 +35,12 @@ class ConstructorDependencyParametersResolver extends ConstructorDependencyResol
             foreach ($parameters as $parameter) {
                 if ($parameter instanceof $dependencyClassName) {
                     return $parameter;
-                }                
+                }
+                if ($parameter instanceof ContainerInterface) {
+                    if ($parameter->has($dependencyClassName)) {
+                        return $parameter->get($dependencyClassName);
+                    }
+                }
             }
         }
 
@@ -43,6 +49,11 @@ class ConstructorDependencyParametersResolver extends ConstructorDependencyResol
             foreach ($parameters as $parameter) {
                 if ($parameter instanceof $dependencyName) {
                     return $parameter;
+                }
+                if ($parameter instanceof ContainerInterface) {
+                    if ($parameter->has($dependencyName)) {
+                        return $parameter->get($dependencyName);
+                    }
                 }
             }
         }
