@@ -244,7 +244,7 @@ class ProjectOverloader
             $className = $classTmp;
         }
 
-        if (is_callable($className) && (! moethod_exists($className, '__invoke'))) {
+        if (is_callable($className) && (! method_exists($className, '__invoke'))) {
             $className = call_user_func_array($className, $arguments);
         }
 
