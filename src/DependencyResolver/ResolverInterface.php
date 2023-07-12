@@ -6,5 +6,5 @@ use Psr\Container\ContainerInterface;
 
 interface ResolverInterface
 {
-    public function resolve(string $requestedName, ContainerInterface $container, array $parameters = []);
+    public function resolve(string $requestedName, ContainerInterface $container, array $parameters = []): array;
 }

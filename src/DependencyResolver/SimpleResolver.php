@@ -6,7 +6,7 @@ use Psr\Container\ContainerInterface;
 
 class SimpleResolver implements ResolverInterface
 {
-    public function resolve(string $requestedName, ContainerInterface $container, array $parameters = [])
+    public function resolve(string $requestedName, ContainerInterface $container, array $parameters = []): array
     {
         return $parameters;
     }

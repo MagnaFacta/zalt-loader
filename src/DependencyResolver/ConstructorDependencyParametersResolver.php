@@ -11,7 +11,7 @@ class ConstructorDependencyParametersResolver extends ConstructorDependencyResol
     public function __construct(protected ?string $leftOverParameterName = null)
     {}
 
-    protected function resolveDependencies($container, array $askedDependencies, array $parameters = []): array
+    protected function resolveDependencies(ContainerInterface $container, array $askedDependencies, array $parameters = []): array
     {
         return array_map(function(ReflectionParameter $dependency) use ($container, $parameters) {
             if ($this->leftOverParameterName !== null && $dependency->getName() === $this->leftOverParameterName) {
@@ -27,7 +27,7 @@ class ConstructorDependencyParametersResolver extends ConstructorDependencyResol
         }, $askedDependencies);
     }
 
-    protected function resolveParameterDependency(ReflectionParameter $dependency, array $parameters)
+    protected function resolveParameterDependency(ReflectionParameter $dependency, array $parameters): mixed
     {
         $dependencyType = $dependency->getType();
         if ($dependencyType instanceof ReflectionNamedType) {

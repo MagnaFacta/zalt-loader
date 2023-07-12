@@ -11,8 +11,8 @@
 
 namespace Zalt\Loader;
 
+use MUtil\Registry\SourceInterface;
 use Psr\Container\ContainerInterface;
-use Zalt\Loader\DependencyResolver\ConstructorDependencyResolver;
 use Zalt\Loader\DependencyResolver\ResolverInterface;
 use Zalt\Loader\DependencyResolver\SimpleResolver;
 use Zalt\Loader\Exception\LoadException;
@@ -30,11 +30,6 @@ use Zalt\Loader\Target\TargetInterface;
 class ProjectOverloader
 {
     /**
-     * @var ContainerInterface
-     */
-    protected $container;
-
-    /**
      * @var ResolverInterface
      */
     protected $dependencyResolver;
@@ -43,14 +38,14 @@ class ProjectOverloader
      *
      * @var ProjectOverloader
      */
-    private static $instanceOfSelf;
+    private static self|null $instanceOfSelf = null;
 
     /**
      * find classes with the old '_' namespace notation
      *
      * @var boolean
      */
-    public $legacyClasses = false;
+    public bool $legacyClasses = false;
 
     /**
      * Prefix for legacy class names registered in the service manager.
@@ -58,14 +53,14 @@ class ProjectOverloader
      *
      * @var string
      */
-    public $legacyPrefix;
+    public string|null $legacyPrefix = null;
 
     /**
      * Array Prefix => Prefix of classes possibly overloaded
      *
      * @var array
      */
-    protected $overloaders = [
+    protected array $overloaders = [
         'Zalt' => 'Zalt',
         'Laminas' => 'Laminas',
         'Zend' => 'Zend',
@@ -75,43 +70,44 @@ class ProjectOverloader
      *
      * @var boolean
      */
-    protected $requireServiceManager = true;
+    protected bool $requireServiceManager = true;
 
     /**
      * @var \MUtil\Source
      */
-    protected $source;
+    protected SourceInterface|null $source = null;
 
     /**
      * Global overrule verbose switch
      *
      * @var boolean
      */
-    public static $verbose = false;
+    public static bool $verbose = false;
 
     /**
      * Show all load attempts until successful
      *
      * @var boolean
      */
-    public static $verboseLoad = false;
+    public static bool $verboseLoad = false;
 
     /**
      * Show all unsuccessful target set attempts
      *
      * @var boolean
      */
-    public static $verboseTarget = false;
+    public static bool $verboseTarget = false;
 
     /**
-     *
+     * @param ContainerInterface $container
      * @param array $overloaders New overloaders
      * @param boolean $add       Add to default overloaders
      */
-    public function __construct(ContainerInterface $container, array $overloaders = array(), $add = true)
+    public function __construct(
+        protected readonly ContainerInterface $container,
+        array $overloaders = [],
+        bool $add = true)
     {
-        $this->container = $container;
-
         if (! self::$instanceOfSelf instanceof self) {
             // Only set for initial overloader
             self::$instanceOfSelf = $this;
@@ -130,9 +126,9 @@ class ProjectOverloader
     /**
      *
      * @param array $overloaders New overloaders, first overloader is tried first
-     * @return \Zalt\Loader\ProjectOverloader
+     * @return self
      */
-    public function addOverloaders(array $overloaders = [])
+    public function addOverloaders(array $overloaders = []): self
     {
         foreach($overloaders as &$overloader) {
             $overloader = str_replace('_', '\\', $overloader);
@@ -142,7 +138,7 @@ class ProjectOverloader
         return $this;
     }
 
-    public function applyToLegacyTarget(\MUtil\Registry\TargetInterface $target)
+    public function applyToLegacyTarget(\MUtil\Registry\TargetInterface $target): bool
     {
         $verbose = self::$verbose || self::$verboseTarget;
 
@@ -175,7 +171,7 @@ class ProjectOverloader
      * @return boolean
      * @throws LoadException
      */
-    public function applyToTarget(TargetInterface $target)
+    public function applyToTarget(TargetInterface $target): bool
     {
         $verbose = self::$verbose || self::$verboseTarget;
 
@@ -232,55 +228,18 @@ class ProjectOverloader
      * @return object The created object
      * @throws LoadException
      */
-    public function create($className, ...$arguments)
+    public function create(mixed $className, mixed ...$arguments): object
     {
-        if (is_array($className) && (! is_callable($className))) {
-            if ($arguments) {
-                throw new LoadException('Create() with an array $className cannot have any other arguments.');
-            }
-
-            $classTmp  = array_shift($className);
-            $arguments = $className;
-            $className = $classTmp;
-        }
-
-        if (is_callable($className) && (! method_exists($className, '__invoke'))) {
-            $className = call_user_func_array($className, $arguments);
-        }
-
-        if (is_object($className)) {
-            $object = $className;
-        } else {
-            $class = $this->find($className);
-            if (! $class) {
-                throw new LoadException("Create() could not load class .\\$className for any of the parent namespaces: "
-                    . implode(', ', $this->overloaders));
-            }
-
-            $resolver = $this->getDependencyResolver();
-            $params   = $resolver->resolve($class, $this->container, $arguments);
-
-            $object = new $class(...$params);
-        }
-
-        if ($object instanceof TargetInterface) {
-            $this->applyToTarget($object);
-        }
-
-        if ($this->legacyClasses && $object instanceof \MUtil\Registry\TargetInterface) {
-            $this->applyToLegacyTarget($object);
-        }
-
-        return $object;
+        return $this->createWithResolver($className, $this->getDependencyResolver(), ...$arguments);
     }
 
     /**
      * Creates a copy of this overloader, but working on a sub folder
      *
      * @param string $subFolder
-     * @return \self
+     * @return self
      */
-    public function createSubFolderOverloader($subFolder)
+    public function createSubFolderOverloader(string $subFolder): self
     {
         $overloaders = [];
 
@@ -307,6 +266,54 @@ class ProjectOverloader
         return $subOverloader;
     }
 
+    public function createWithResolver(mixed $className, ResolverInterface|string $resolver, mixed ...$arguments): object
+    {
+        if (is_array($className) && (! is_callable($className))) {
+            if ($arguments) {
+                throw new LoadException('Create() with an array $className cannot have any other arguments.');
+            }
+
+            $classTmp  = array_shift($className);
+            $arguments = $className;
+            $className = $classTmp;
+        }
+
+        if (is_callable($className) && (! method_exists($className, '__invoke'))) {
+            $className = call_user_func_array($className, $arguments);
+        }
+
+        if (is_object($className)) {
+            $object = $className;
+        } else {
+            $class = $this->find($className);
+            if (! $class) {
+                throw new LoadException("Create() could not load class .\\$className for any of the parent namespaces: "
+                    . implode(', ', $this->overloaders));
+            }
+
+
+            if (!$resolver instanceof ResolverInterface && class_exists($resolver)) {
+                $resolver = new $resolver;
+                if (!$resolver instanceof ResolverInterface) {
+                    throw new LoadException(get_class($resolver) . ' is not a valid resolver');
+                }
+            }
+            $params   = $resolver->resolve($class, $this->container, $arguments);
+
+            $object = new $class(...$params);
+        }
+
+        if ($object instanceof TargetInterface) {
+            $this->applyToTarget($object);
+        }
+
+        if ($this->legacyClasses && $object instanceof \MUtil\Registry\TargetInterface) {
+            $this->applyToLegacyTarget($object);
+        }
+
+        return $object;
+    }
+
     /**
      * Finds the given class or interface.
      *
@@ -314,7 +321,7 @@ class ProjectOverloader
      * @return string The class name including the correct prefix
      * @throws LoadException
      */
-    public function find($className)
+    public function find(string $className): string
     {
         // Return full class specifications immediately
         if (class_exists($className, true)) {
@@ -343,7 +350,7 @@ class ProjectOverloader
      * @param boolean $verbose
      * @return string
      */
-    protected function findForPrefix($className, $prefix, $verbose)
+    protected function findForPrefix(string $className, string $prefix, bool $verbose): string|null
     {
         $class = $prefix . '\\' . $className;
         if ($verbose) {
@@ -379,6 +386,7 @@ class ProjectOverloader
         if ($verbose) {
             echo "Load attempt $class failed<br/>\n";
         }
+        return null;
     }
 
     /**
@@ -387,12 +395,12 @@ class ProjectOverloader
      * @param  string $name
      * @return string
      */
-    protected function formatName($name)
+    protected function formatName(string $name): string
     {
-        return ucfirst(strtr((string) $name, '_', '\\'));
+        return ucfirst(strtr($name, '_', '\\'));
     }
 
-    public function getContainer()
+    public function getContainer(): ContainerInterface
     {
         return $this->container;
     }
@@ -413,7 +421,7 @@ class ProjectOverloader
      *
      * @return \Zalt\Loader\ProjectOverloader
      */
-    public static function getInstance()
+    public static function getInstance(): self
     {
         return self::$instanceOfSelf;
     }
@@ -422,7 +430,7 @@ class ProjectOverloader
      *
      * @return array Current overloaders
      */
-    public function getOverloaders()
+    public function getOverloaders(): array
     {
         return $this->overloaders;
     }
@@ -438,9 +446,9 @@ class ProjectOverloader
     /**
      *
      * @param array $overloaders New overloaders
-     * @return \Zalt\Loader\ProjectOverloader
+     * @return self
      */
-    public function setOverloaders(array $overloaders = array())
+    public function setOverloaders(array $overloaders = []): self
     {
         $this->overloaders = array_combine($overloaders, $overloaders);
 
@@ -450,7 +458,7 @@ class ProjectOverloader
     /**
      * @param \MUtil\Registry\SourceInterface $source
      */
-    public function setSource(\MUtil\Registry\SourceInterface $source)
+    public function setSource(SourceInterface $source)
     {
         $this->source = $source;
 
