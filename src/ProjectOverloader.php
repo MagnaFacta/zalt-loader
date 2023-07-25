@@ -254,6 +254,8 @@ class ProjectOverloader
         }
 
         $subOverloader = new self($this->container, $overloaders, false);
+        $subOverloader->setDependencyResolver($this->getDependencyResolver());
+
         if ($this->legacyClasses) {
             $subOverloader->legacyClasses = true;
             $subOverloader->legacyPrefix  = $this->legacyPrefix;
