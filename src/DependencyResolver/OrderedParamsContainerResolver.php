@@ -30,7 +30,7 @@ class OrderedParamsContainerResolver extends ConstructorDependencyResolver
                 return $result;
             }
             $result = $this->resolveDefaultDependency($dependency);
-            if ($result === $parameters[$parameterIndex]) {
+            if ($result === null && array_key_exists($parameterIndex, $parameters) && $parameters[$parameterIndex] === null) {
                 $parameterIndex += 1;
             }
             return $result;
