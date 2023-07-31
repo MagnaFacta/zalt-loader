@@ -29,7 +29,11 @@ class OrderedParamsContainerResolver extends ConstructorDependencyResolver
             if ($result = $this->resolveContainerDependency($dependency, $container)) {
                 return $result;
             }
-            return $this->resolveDefaultDependency($dependency);
+            $result = $this->resolveDefaultDependency($dependency);
+            if ($result === $parameters[$parameterIndex]) {
+                $parameterIndex += 1;
+            }
+            return $result;
         }, $askedDependencies);
     }
 
