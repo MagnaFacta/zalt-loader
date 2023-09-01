@@ -31,7 +31,7 @@ class ConstructorDependencyResolver implements ResolverInterface
 
     protected function resolveDependencies(ContainerInterface $container, array $askedDependencies, array $parameters): array
     {
-        return array_map(function(ReflectionParameter $dependency) use ($container, $parameters) {
+        return array_map(function(ReflectionParameter $dependency) use ($container) {
             if ($result = $this->resolveContainerDependency($dependency, $container)) {
                 return $result;
             }

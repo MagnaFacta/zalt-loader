@@ -47,7 +47,7 @@ class TargetLoaderTest extends \PHPUnit\Framework\TestCase
     {
         $this->sm = new SimpleServiceManager([
             'var321' => new \Test3\In3and2and1(),
-            'var31' => new \Test3\In3and1(null),
+            'var31' => new \Test3\In3and1(),
             ]);
 
         $this->overLoader = new ProjectOverloader($this->sm, [

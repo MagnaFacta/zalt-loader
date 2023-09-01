@@ -1,7 +1,7 @@
 composer.phar
 /vendor/
-/nbproject/
-/composer.lock
 /test/build/logs
 /.idea
 /test/.phpunit.result.cache
+test/.phpunit.cache
+test/html-coverage

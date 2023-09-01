@@ -60,7 +60,7 @@ class OrderedParamsContainerResolver extends ConstructorDependencyResolver
                 return $parameter;
             }
             if ($parameter instanceof ContainerInterface && $parameter->has($dependencyType)) {
-                return $parameter->get($dependencyClassName);
+                return $parameter->get($parameter->get($dependencyType));
             }
 
             if ($dependencyType === 'array' && is_array($parameter)) {

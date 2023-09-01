@@ -50,7 +50,7 @@ class BasicLoaderTest extends \PHPUnit\Framework\TestCase
             ]);
     }
 
-    public function providerLoadClass()
+    public static function providerLoadClass()
     {
         return [
             ['Test1', 'OnlyIn1'],
@@ -61,7 +61,7 @@ class BasicLoaderTest extends \PHPUnit\Framework\TestCase
         ];
     }
 
-    public function providerLoadInstanceOf()
+    public static function providerLoadInstanceOf()
     {
         return [
             ['In3and2and1', 'Test1\\In3and2and1'],
@@ -76,7 +76,7 @@ class BasicLoaderTest extends \PHPUnit\Framework\TestCase
         ];
     }
 
-    public function providerLoadOldClass()
+    public static function providerLoadOldClass()
     {
         return [
             ['\\Test1_', 'Legacy1'],
@@ -91,7 +91,7 @@ class BasicLoaderTest extends \PHPUnit\Framework\TestCase
         ];
     }
 
-    public function providerLoadSubClass()
+    public static function providerLoadSubClass()
     {
         return [
             ['Test2', 'Sub', 'SubOnlyIn2'],
@@ -99,7 +99,7 @@ class BasicLoaderTest extends \PHPUnit\Framework\TestCase
         ];
     }
 
-    public function providerLoadSubOldClass()
+    public static function providerLoadSubOldClass()
     {
         return [
             ['Test2', 'Sub', 'SubLegacy2'],
@@ -107,7 +107,7 @@ class BasicLoaderTest extends \PHPUnit\Framework\TestCase
         ];
     }
 
-    public function providerLoadSubMixedClass()
+    public static function providerLoadSubMixedClass()
     {
         return [
             ['Test2', 'Sub', 'SubOnlyIn2', true,],
