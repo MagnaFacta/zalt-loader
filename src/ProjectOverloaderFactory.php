@@ -21,7 +21,7 @@ use Psr\Container\ContainerInterface;
  */
 class ProjectOverloaderFactory
 {
-    static public array $defaultOverLoaderPaths = ['Zalt', 'Laminas', 'Mezzio',  'Symfony', 'Zend'];
+    static public array $defaultOverLoaderPaths = ['Zend', 'Symfony', 'Mezzio', 'Laminas', 'Zalt'];
     
     public function __invoke(ContainerInterface $container)
     {

@@ -56,14 +56,15 @@ class ProjectOverloader
     public string|null $legacyPrefix = null;
 
     /**
-     * Array Prefix => Prefix of classes possibly overloaded
+     * Array Prefix => Prefix of classes possibly overloaded, ordered from low
+     * to high prio (last prefix is tried first).
      *
      * @var array
      */
     protected array $overloaders = [
-        'Zalt' => 'Zalt',
-        'Laminas' => 'Laminas',
         'Zend' => 'Zend',
+        'Laminas' => 'Laminas',
+        'Zalt' => 'Zalt',
     ];
 
     /**
@@ -125,7 +126,10 @@ class ProjectOverloader
 
     /**
      *
-     * @param array $overloaders New overloaders, first overloader is tried first
+     * @param array $overloaders Add overloaders to the stack. Added overloaders
+     *                           have higher priority than existing ones (the last
+     *                           prefix is tried first).
+     *
      * @return self
      */
     public function addOverloaders(array $overloaders = []): self
@@ -133,7 +137,7 @@ class ProjectOverloader
         foreach($overloaders as &$overloader) {
             $overloader = str_replace('_', '\\', $overloader);
         }
-        $this->setOverloaders($overloaders + $this->overloaders);
+        $this->setOverloaders($this->overloaders + $overloaders);
 
         return $this;
     }
@@ -334,7 +338,7 @@ class ProjectOverloader
         // echo "[$verbose] [" . self::$verbose . "] [" . self::$verboseLoad . "]<br/>\n";
         $className = $this->formatName($className);
 
-        foreach ($this->overloaders as $prefix) {
+        foreach (array_reverse($this->overloaders) as $prefix) {
             $class = $this->findForPrefix($className, $prefix, $verbose);
             if ($class) {
                 return $class;

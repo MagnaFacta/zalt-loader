@@ -44,9 +44,9 @@ class BasicLoaderTest extends \PHPUnit\Framework\TestCase
         $this->sm = new SimpleServiceManager([]);
         
         $this->overLoader = new ProjectOverloader($this->sm, [
-            'Test3',
-            'Test2',
             'Test1',
+            'Test2',
+            'Test3',
             ]);
     }
 
