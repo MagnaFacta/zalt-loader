@@ -32,7 +32,7 @@ class ProjectOverloader
     /**
      * @var ResolverInterface
      */
-    protected $dependencyResolver;
+    protected ResolverInterface $dependencyResolver;
 
     /**
      *
@@ -413,7 +413,7 @@ class ProjectOverloader
 
     public function getDependencyResolver(): ResolverInterface
     {
-        if (! $this->dependencyResolver) {
+        if (!isset($this->dependencyResolver)) {
             // The resolver will default to just passing along the parameters provided.
             // To use more advanced resolving use the ConstructorDependencyResolver or
             // ConstructorDependencyParametersResolver 
