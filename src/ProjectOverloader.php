@@ -74,7 +74,7 @@ class ProjectOverloader
     protected bool $requireServiceManager = true;
 
     /**
-     * @var \MUtil\Source
+     * @var SourceInterface|null
      */
     protected SourceInterface|null $source = null;
 

@@ -144,7 +144,6 @@ class BasicLoaderTest extends \PHPUnit\Framework\TestCase
 
     /**
      *
-     * @param string $namespace
      * @param string $subClass
      *
      * @dataProvider providerLoadInstanceOf

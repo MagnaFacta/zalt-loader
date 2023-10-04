@@ -93,8 +93,8 @@ class ObjectListOverloader
      *
      * @param string $classType The class or interface that must me implemented
      * @param array  $paths Array of prefix => path to search
-     * @param string $nameMEthod The method to call to get the name of the class
-     * @return [] array of classname => name
+     * @param string $nameMethod The method to call to get the name of the class
+     * @return array of classname => name
      */
     public function _listAll($classType, $paths, $nameMethod = 'getName')
     {
@@ -152,7 +152,7 @@ class ObjectListOverloader
      * @param string $subType The type (i.e. lookup directory with an associated class) of the parts to list
      * @param string $subClass The class / interface the object should have
      * @param string $function Function name to all on all objects
-     * @return \Gems_tracker_TrackerEventInterface or more specific a $screenClass type object
+     * @return array of classname => name
      */
     public function listObjects($subType, $subClass, $function = 'getName')
     {
