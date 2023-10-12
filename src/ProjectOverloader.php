@@ -228,7 +228,7 @@ class ProjectOverloader
      * </code>
      *
      * @param  mixed  $className The name of the class, minus the prefix
-     * @param  array  $arguments Class loading arguments
+     * @param  mixed  $arguments Class loading arguments
      * @return object The created object
      * @throws LoadException
      */
