@@ -56,7 +56,12 @@ class ConstructorDependencyResolver implements ResolverInterface
         if (null !== $dependencyName) {
             // Return named parameter
             if ($container->has($dependencyName)) {
-                return $container->get($dependencyName);
+                $entry = $container->get($dependencyName);
+                if ($entry instanceOf \Closure) {
+                    return $entry();
+                } else {
+                    return $entry;
+                }
             }
 
             // Returned aliased service
