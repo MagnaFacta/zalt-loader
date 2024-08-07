@@ -9,7 +9,8 @@
     },
     "require-dev": {
         "phpstan/phpstan": "1.*",
-        "phpunit/phpunit": "10.*"
+        "phpunit/phpunit": "10.*",
+        "magnafacta/mutil": "^2.0.0"
     },
     "authors": [
         {
@@ -65,7 +66,7 @@
     ],
     "extra": {
         "branch-alias": {
-            "dev-psr-11": "psr-11-dev"
+            "dev-psr-11": "1.0.x-dev"
         }
     },
     "scripts": {
