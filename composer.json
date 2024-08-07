@@ -21,7 +21,7 @@
             "email": "menno.dekker@erasmusmc.nl"
         }
     ],
-    "minimum-stability": "dev",
+    "minimum-stability": "stable",
     "autoload": {
         "psr-4": {
             "Zalt\\Loader\\": "src"
