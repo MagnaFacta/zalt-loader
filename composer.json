@@ -5,10 +5,9 @@
     "require": {
         "php": ">=8.1.0",
         "psr/container": "^1.0 || ^2.0",
-        "magnafacta/zalt-util": "dev-main"
+        "magnafacta/zalt-util": "^1.0.0"
     },
     "require-dev": {
-        "magnafacta/mutil": "2.x-dev",
         "phpstan/phpstan": "1.*",
         "phpunit/phpunit": "10.*"
     },
