@@ -41,7 +41,7 @@ jobs:
           restore-keys: ${{ runner.os }}-composer-${{ matrix.prefer }}-
 
       - name: Install dependencies
-        run: composer update --${{ matrix.stability }} --prefer-dist --no-interaction
+        run: COMPOSER_ROOT_VERSION=dev-psr-11 composer update --${{ matrix.stability }} --prefer-dist --no-interaction
 
       - name: Run test suite
         run: composer test
@@ -65,7 +65,7 @@ jobs:
           restore-keys: ${{ runner.os }}-composer-prefer-stable-
 
       - name: Install dependencies
-        run: composer update --prefer-stable --prefer-dist --no-interaction
+        run: COMPOSER_ROOT_VERSION=dev-psr-11 composer update --prefer-stable --prefer-dist --no-interaction
 
       - name: Run phpstan
         run: vendor/bin/phpstan --no-progress
