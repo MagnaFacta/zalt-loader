@@ -1,4 +1,5 @@
 composer.phar
+composer.lock
 /vendor/
 /test/build/logs
 /.idea

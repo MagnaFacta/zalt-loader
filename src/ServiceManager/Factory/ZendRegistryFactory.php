@@ -15,7 +15,6 @@ use Interop\Container\ContainerInterface;
 use Interop\Container\Exception\ContainerException;
 use Laminas\ServiceManager\Exception\ServiceNotCreatedException;
 use Laminas\ServiceManager\Exception\ServiceNotFoundException;
-use Laminas\ServiceManager\ServiceLocatorInterface;
 
 /**
  *
@@ -36,7 +35,7 @@ class ZendRegistryFactory implements \Laminas\ServiceManager\Factory\AbstractFac
      *
      * @param null|\Zend_Registry $registry
      */
-    public function __construct(\Zend_Registry $registry = null) 
+    public function __construct(?\Zend_Registry $registry = null)
     {
         if ($registry) {
             $this->registry = $registry;
@@ -82,7 +81,7 @@ class ZendRegistryFactory implements \Laminas\ServiceManager\Factory\AbstractFac
      *     creating a service.
      * @throws ContainerException if any other error occurs
      */
-    public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
+    public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null)
     {
         $name = $this->_findName($requestedName);
         
