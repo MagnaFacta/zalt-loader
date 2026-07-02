@@ -66,7 +66,7 @@ class ZendRegistryFactory implements \Laminas\ServiceManager\Factory\AbstractFac
     public function canCreate(ContainerInterface $container, $requestedName)
     {
         // echo '[' . $requestedName . "]\n";
-        return (boolean) $this->_findName($requestedName); 
+        return (bool) $this->_findName($requestedName);
     }
 
     /**
